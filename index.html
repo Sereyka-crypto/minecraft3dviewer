@@ -24,7 +24,6 @@
         h1 { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
         .subtitle { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 30px; }
 
-        /* VIEW-ONLY DROP ZONE */
         .view-only-drop-zone {
             display: none;
             position: fixed;
@@ -274,7 +273,6 @@
     </div>
 </div>
 
-<!-- VIEW-ONLY DROP ZONE -->
 <div class="view-only-drop-zone" id="view-only-drop-zone">
     <div class="drop-zone-content" id="drop-zone-content">
         <h2>🎁 Patreon Viewer Mode</h2>
@@ -365,14 +363,12 @@
         "End Gateway"
     ];
 
-    // VIEW-ONLY MODE SETUP
     if (isViewOnly) {
         document.getElementById('upload-section').style.display = 'none';
         document.getElementById('load-button').style.display = 'none';
         document.querySelector('.subtitle').textContent = '🎁 Patreon Exclusive Viewer';
         document.getElementById('view-only-drop-zone').classList.add('active');
 
-        // Setup drag & drop
         const dropZone = document.getElementById('drop-zone-content');
 
         dropZone.addEventListener('dragover', (e) => {
@@ -404,7 +400,6 @@
         });
     }
 
-    // SHARE BUTTON
     document.getElementById('share-button')?.addEventListener('click', async () => {
         if (!model || !modelZip) {
             alert('Please load a model first!');
@@ -415,16 +410,12 @@
 
         try {
             const shareZip = new JSZip();
-
-            // Add original model ZIP
             shareZip.file('model.zip', modelZip);
 
-            // Add litematic if exists
             if (litematicFile) {
                 shareZip.file('litematic.litematic', litematicFile);
             }
 
-            // Add metadata
             const metadata = {
                 currentLayer: currentLayer,
                 totalLayers: totalLayers,
@@ -433,7 +424,6 @@
             };
             shareZip.file('metadata.json', JSON.stringify(metadata));
 
-            // Generate share file
             const blob = await shareZip.generateAsync({ type: 'blob' });
             const url = URL.createObjectURL(blob);
 
@@ -453,7 +443,6 @@
         }
     });
 
-    // LOAD SHARED MODEL
     async function loadSharedModel(file) {
         document.getElementById('loading').style.display = 'block';
         document.getElementById('view-only-drop-zone').style.display = 'none';
@@ -461,11 +450,9 @@
         try {
             const zip = await JSZip.loadAsync(file);
 
-            // Load model ZIP
             const modelFile = await zip.file('model.zip').async('blob');
             modelZip = new File([modelFile], 'model.zip');
 
-            // Load litematic if exists
             const litematicZipFile = zip.file('litematic.litematic');
             if (litematicZipFile) {
                 const litematicBlob = await litematicZipFile.async('blob');
@@ -473,7 +460,6 @@
                 await parseLitematic(litematicFile);
             }
 
-            // Initialize and load
             if (!scene) initThreeJS();
             await loadModel();
 
@@ -485,76 +471,6 @@
         }
     }
 
-    function generateNameVariants(blockName) {
-        const variants = [];
-        const lower = blockName.toLowerCase();
-
-        variants.push(lower);
-        variants.push(lower.replace(/\s+/g, '_'));
-
-        if (lower.includes('wall banner')) {
-            const withoutWall = lower.replace(/\s*wall\s*/g, ' ').trim();
-            variants.push(withoutWall);
-            variants.push(withoutWall.replace(/\s+/g, '_'));
-        }
-
-        if (lower.includes('standing')) {
-            const withoutStanding = lower.replace(/\s*standing\s*/g, ' ').trim();
-            variants.push(withoutStanding);
-            variants.push(withoutStanding.replace(/\s+/g, '_'));
-        }
-
-        variants.push(lower.replace(/\s+/g, ''));
-        variants.push(lower.replace(/\s+/g, '-'));
-
-        const words = lower.split(/\s+/);
-        const singularWords = words.map(w => w.endsWith('s') && w.length > 2 ? w.slice(0, -1) : w);
-        variants.push(singularWords.join(' '));
-        variants.push(singularWords.join('_'));
-        variants.push(singularWords.join(''));
-        variants.push(singularWords.join('-'));
-
-        if (words.length > 1) {
-            variants.push(words[0]);
-            variants.push(words[0].endsWith('s') && words[0].length > 2 ? words[0].slice(0, -1) : words[0]);
-        }
-
-        if (words.length > 1) {
-            variants.push(words[words.length - 1]);
-            const lastWord = words[words.length - 1];
-            variants.push(lastWord.endsWith('s') && lastWord.length > 2 ? lastWord.slice(0, -1) : lastWord);
-        }
-
-        variants.push(lower.replace('planks', 'plank'));
-        variants.push(lower.replace('stairs', 'stair'));
-        variants.push(lower.replace('logs', 'log'));
-        variants.push(lower.replace('leaves', 'leaf'));
-
-        return [...new Set(variants)];
-    }
-
-    function tryLoadIcon(img, blockName, variantIndex = 0) {
-        const variants = generateNameVariants(blockName);
-
-        if (variantIndex >= variants.length) {
-            img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="%23555"/><text x="24" y="30" text-anchor="middle" fill="white" font-size="20">?</text></svg>';
-            img.onerror = null;
-            return;
-        }
-
-        const variant = variants[variantIndex];
-        img.src = `textures/item/${variant}.png`;
-
-        img.onerror = function() {
-            tryLoadIcon(img, blockName, variantIndex + 1);
-        };
-
-        img.onload = function() {
-            img.onerror = null;
-            img.onload = null;
-        };
-    }
-
     function formatStacks(count) {
         if (count < 64) {
             return count.toString();
@@ -564,9 +480,9 @@
             const stacks = Math.floor(count / 64);
             const remainder = count % 64;
             if (remainder === 0) {
-                return `${stacks} x 64`;
+                return stacks + ' x 64';
             } else {
-                return `${stacks} x 64 + ${remainder}`;
+                return stacks + ' x 64 + ' + remainder;
             }
         }
     }
@@ -867,7 +783,7 @@
         document.getElementById('model-input').addEventListener('change', (e) => {
             if (e.target.files[0]) {
                 modelZip = e.target.files[0];
-                document.getElementById('model-status').textContent = `✓ ${modelZip.name}`;
+                document.getElementById('model-status').textContent = '✓ ' + modelZip.name;
                 document.getElementById('load-button').style.display = 'inline-flex';
             }
         });
@@ -875,7 +791,7 @@
         document.getElementById('litematic-input').addEventListener('change', async (e) => {
             if (e.target.files[0]) {
                 litematicFile = e.target.files[0];
-                document.getElementById('litematic-status').textContent = `✓ ${litematicFile.name}`;
+                document.getElementById('litematic-status').textContent = '✓ ' + litematicFile.name;
                 await parseLitematic(litematicFile);
                 updateMaterialList();
             }
@@ -887,7 +803,7 @@
                 if (file.type.startsWith('image/')) customTextures[file.name] = URL.createObjectURL(file);
             });
             hasCustomTextures = Object.keys(customTextures).length > 0;
-            if (hasCustomTextures) document.getElementById('texture-status').textContent = `✓ ${Object.keys(customTextures).length} files`;
+            if (hasCustomTextures) document.getElementById('texture-status').textContent = '✓ ' + Object.keys(customTextures).length + ' files';
         });
 
         document.getElementById('load-button').addEventListener('click', async () => {
@@ -1042,7 +958,6 @@
             document.getElementById('right-controls').style.display = 'flex';
             document.getElementById('layer-slider-container').style.display = 'block';
 
-            // Hide share button in view-only mode
             if (isViewOnly) {
                 document.getElementById('share-button').style.display = 'none';
             }
@@ -1054,67 +969,11 @@
     }
 
     function updateMaterialList() {
-        const list = document.getElementById('material-list');
-        list.innerHTML = '';
-
-        if (litematicBlocks.length > 0) {
-            litematicBlocks.forEach((block) => {
-                const item = document.createElement('div');
-                item.className = 'material-item' + (block.checked ? ' checked' : '');
-
-                const checkboxContainer = document.createElement('div');
-                checkboxContainer.className = 'material-checkbox-container';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'material-checkbox';
-                checkbox.checked = block.checked;
-                checkbox.addEventListener('change', (e) => {
-                    block.checked = e.target.checked;
-                    item.classList.toggle('checked', e.target.checked);
-                    saveCheckboxes();
-                });
-                checkboxContainer.appendChild(checkbox);
-
-                const imgContainer = document.createElement('div');
-                imgContainer.className = 'material-img-container';
-                const img = document.createElement('img');
-                img.className = 'material-img';
-
-                tryLoadIcon(img, block.name);
-
-                imgContainer.appendChild(img);
-
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'material-name';
-                nameDiv.textContent = block.name;
-
-                const quantityDiv = document.createElement('div');
-                quantityDiv.className = 'material-quantity';
-                quantityDiv.textContent = block.count.toString();
-
-                const stacksDiv = document.createElement('div');
-                stacksDiv.className = 'material-stacks';
-                stacksDiv.textContent = formatStacks(block.count);
-
-                item.appendChild(checkboxContainer);
-                item.appendChild(imgContainer);
-                item.appendChild(nameDiv);
-                item.appendChild(quantityDiv);
-                item.appendChild(stacksDiv);
-
-                list.appendChild(item);
-            });
+        if (typeof window.createMaterialsList === 'function') {
+            window.createMaterialsList(litematicBlocks);
         } else {
-            list.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center; padding: 40px 20px;">Load litematic</p>';
+            console.error('createMaterialsList not found in main.js');
         }
-    }
-
-    function saveCheckboxes() {
-        const checks = {};
-        litematicBlocks.forEach(block => {
-            checks[block.name] = block.checked;
-        });
-        localStorage.setItem('blockChecks', JSON.stringify(checks));
     }
 
     function applyTextures() {
@@ -1337,7 +1196,7 @@
     }
 
     function updateLayerDisplay() {
-        document.getElementById('layer-info-top').textContent = `Layer ${currentLayer} / ${totalLayers}`;
+        document.getElementById('layer-info-top').textContent = 'Layer ' + currentLayer + ' / ' + totalLayers;
     }
 
     document.getElementById('layer-slider').addEventListener('input', (e) => {
@@ -1385,5 +1244,7 @@
         }
     });
 </script>
+
+<script src="src/main.js"></script>
 </body>
 </html>
