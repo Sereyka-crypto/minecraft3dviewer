@@ -10,13 +10,13 @@ const TEXTURE_SOURCES = [
 
 function createMaterialsList(litematicBlocks) {
     console.log("Creating materials list with", litematicBlocks.length, "blocks");
-    
+
     const list = document.getElementById('material-list');
     if (!list) {
         console.error("Material list element not found!");
         return;
     }
-    
+
     list.innerHTML = '';
 
     if (litematicBlocks.length > 0) {
@@ -66,7 +66,7 @@ function createMaterialsList(litematicBlocks) {
 
                 const source = TEXTURE_SOURCES[sourceIndex];
                 const variant = variants[variantIndex];
-                
+
                 icon.src = source + variant + '.png';
                 variantIndex++;
             }
@@ -112,48 +112,89 @@ function createMaterialsList(litematicBlocks) {
 
 function generateNameVariants(name) {
     const variants = [];
-    
+
     // Base variants
-    variants.push(name.replace(/\s+/g, '_'));              // dark_oak_fence_gate
-    variants.push(name.replace(/\s+/g, '-'));              // dark-oak-fence-gate  
-    variants.push(name.replace(/\s+/g, ''));               // darkoakfencegate
-    
-    // Special replacements
-    variants.push(name.replace(/\s+wall\s+banner/gi, '_banner'));  // red_banner
-    variants.push(name.replace(/\s+wall/gi, ''));          // remove wall
-    variants.push(name.replace(/\s+standing/gi, ''));      // remove standing
-    
+    variants.push(name.replace(/\s+/g, '_'));              // azalea_bush
+    variants.push(name.replace(/\s+/g, '-'));              // azalea-bush
+    variants.push(name.replace(/\s+/g, ''));               // azaleabush
+
+    // Remove last word (bush, plate, etc)
+    const words = name.split(/\s+/);
+    if (words.length > 1) {
+        // Try without last word
+        const withoutLast = words.slice(0, -1).join('_');
+        variants.push(withoutLast);                        // azalea (without bush)
+
+        // Try without first word
+        const withoutFirst = words.slice(1).join('_');
+        variants.push(withoutFirst);
+
+        // First + last word
+        variants.push(words[0] + '_' + words[words.length - 1]);
+        variants.push(words[0] + words[words.length - 1]);
+    }
+
+    // Special cases for specific blocks
+    const specialCases = {
+        'azalea bush': ['azalea', 'potted_azalea_bush', 'azalea_bush'],
+        'flowering azalea bush': ['flowering_azalea', 'flowering_azalea_bush', 'potted_flowering_azalea_bush'],
+        'sweet berry bush': ['sweet_berries', 'sweet_berry_bush'],
+        'mangrove pressure plate': ['mangrove_pressure_plate'],
+        'red wall banner': ['red_banner'],
+        'white wall banner': ['white_banner']
+    };
+
+    const lowerName = name.toLowerCase();
+    if (specialCases[lowerName]) {
+        variants.push(...specialCases[lowerName]);
+    }
+
+    // Bush → potted variant
+    if (name.toLowerCase().includes('bush')) {
+        const pottedName = name.toLowerCase().replace(/\s+/g, '_');
+        variants.push('potted_' + pottedName);
+    }
+
+    // Remove "wall" from banners
+    variants.push(name.replace(/\s+wall\s+banner/gi, '_banner'));
+    variants.push(name.replace(/\s+wall/gi, ''));
+    variants.push(name.replace(/\s+standing/gi, ''));
+
     // Leaves variations
     if (name.includes('leaves') || name.includes('leaf')) {
         variants.push(name.replace(/\s+leaf$/i, '_leaves'));
         variants.push(name.replace(/\s+leaves$/i, '_leaves'));
         variants.push(name.replace(/\s+leaf\s+/gi, '_leaves_'));
     }
-    
+
     // Planks, bricks, etc
-    const specialEndings = ['planks', 'bricks', 'leaves', 'carpet', 'wool', 'fence', 'gate', 'door', 'slab', 'stairs', 'log', 'wood'];
+    const specialEndings = [
+        'planks', 'bricks', 'leaves', 'carpet', 'wool',
+        'fence', 'gate', 'door', 'slab', 'stairs',
+        'log', 'wood', 'plate', 'bush', 'berries'
+    ];
+
     specialEndings.forEach(ending => {
         const pattern = new RegExp('\\s+' + ending + '$', 'i');
         if (pattern.test(name)) {
             variants.push(name.replace(pattern, '_' + ending));
         }
     });
-    
+
     // Fence gate special case
     variants.push(name.replace(/fence\s+gate/gi, 'fence_gate'));
-    
-    // First + last word
-    const words = name.split(/\s+/);
-    if (words.length > 1) {
-        variants.push(words[0] + '_' + words[words.length - 1]);
-        variants.push(words[0] + words[words.length - 1]);
-    }
-    
-    // Singular to plural
+
+    // Pressure plate
+    variants.push(name.replace(/pressure\s+plate/gi, 'pressure_plate'));
+
+    // Singular to plural and vice versa
     if (!name.endsWith('s')) {
         variants.push(name.replace(/\s+/g, '_') + 's');
+    } else {
+        const withoutS = name.slice(0, -1);
+        variants.push(withoutS.replace(/\s+/g, '_'));
     }
-    
+
     // Remove duplicates
     return [...new Set(variants)];
 }
@@ -176,7 +217,7 @@ function formatStacks(count) {
 
 function saveCheckboxes() {
     if (typeof litematicBlocks === 'undefined') return;
-    
+
     const checks = {};
     litematicBlocks.forEach(block => {
         checks[block.name] = block.checked;
