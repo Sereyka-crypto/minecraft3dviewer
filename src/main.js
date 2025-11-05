@@ -1,26 +1,22 @@
 console.log("=== main.js loaded ===");
 
-// Multiple texture sources (fallback chain)
+// Your GitHub Pages textures + GitHub fallback
 const TEXTURE_SOURCES = [
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.4/assets/minecraft/',
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/',
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21/assets/minecraft/',
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.4/assets/minecraft/',
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.2/assets/minecraft/',
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20/assets/minecraft/',
-    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.19.4/assets/minecraft/'
+    'https://sereyka-crypto.github.io/minecraft3dviewer/textures/',
+    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.4/assets/minecraft/textures/item/',
+    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/item/',
+    'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.4/assets/minecraft/textures/item/'
 ];
 
-// Materials list functionality
 function createMaterialsList(litematicBlocks) {
     console.log("Creating materials list with", litematicBlocks.length, "blocks");
-
+    
     const list = document.getElementById('material-list');
     if (!list) {
         console.error("Material list element not found!");
         return;
     }
-
+    
     list.innerHTML = '';
 
     if (litematicBlocks.length > 0) {
@@ -48,7 +44,6 @@ function createMaterialsList(litematicBlocks) {
             const icon = document.createElement('img');
             icon.className = 'material-img';
 
-            // Generate name variants
             const name = block.name.toLowerCase();
             const variants = generateNameVariants(name);
 
@@ -57,14 +52,12 @@ function createMaterialsList(litematicBlocks) {
 
             function tryNextSource() {
                 if (sourceIndex >= TEXTURE_SOURCES.length) {
-                    // All sources exhausted
-                    console.warn('❌ Failed for: ' + block.name);
+                    console.warn('❌ Failed: ' + block.name);
                     icon.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="%23555"/><text x="24" y="30" text-anchor="middle" fill="white" font-size="20">?</text></svg>';
                     return;
                 }
 
                 if (variantIndex >= variants.length) {
-                    // Try next source with first variant
                     sourceIndex++;
                     variantIndex = 0;
                     tryNextSource();
@@ -73,15 +66,16 @@ function createMaterialsList(litematicBlocks) {
 
                 const source = TEXTURE_SOURCES[sourceIndex];
                 const variant = variants[variantIndex];
-                icon.src = source + 'textures/item/' + variant + '.png';
+                
+                icon.src = source + variant + '.png';
                 variantIndex++;
             }
 
             icon.onerror = tryNextSource;
             icon.onload = function() {
                 const fileName = icon.src.split('/').pop();
-                const version = icon.src.match(/minecraft-assets\/([^/]+)\//)?.[1] || 'unknown';
-                console.log('✅ ' + block.name + ' → ' + fileName + ' (v' + version + ')');
+                const isGitHubPages = icon.src.includes('sereyka-crypto.github.io');
+                console.log('✅ ' + block.name + ' → ' + fileName + (isGitHubPages ? ' (your CDN)' : ' (fallback)'));
             };
 
             tryNextSource();
@@ -118,49 +112,49 @@ function createMaterialsList(litematicBlocks) {
 
 function generateNameVariants(name) {
     const variants = [];
-
+    
     // Base variants
     variants.push(name.replace(/\s+/g, '_'));              // dark_oak_fence_gate
-    variants.push(name.replace(/\s+/g, '-'));              // dark-oak-fence-gate
+    variants.push(name.replace(/\s+/g, '-'));              // dark-oak-fence-gate  
     variants.push(name.replace(/\s+/g, ''));               // darkoakfencegate
-
+    
     // Special replacements
     variants.push(name.replace(/\s+wall\s+banner/gi, '_banner'));  // red_banner
     variants.push(name.replace(/\s+wall/gi, ''));          // remove wall
     variants.push(name.replace(/\s+standing/gi, ''));      // remove standing
-
+    
     // Leaves variations
     if (name.includes('leaves') || name.includes('leaf')) {
         variants.push(name.replace(/\s+leaf$/i, '_leaves'));
         variants.push(name.replace(/\s+leaves$/i, '_leaves'));
         variants.push(name.replace(/\s+leaf\s+/gi, '_leaves_'));
     }
-
+    
     // Planks, bricks, etc
-    const specialEndings = ['planks', 'bricks', 'leaves', 'carpet', 'wool', 'fence', 'gate', 'door', 'slab', 'stairs'];
+    const specialEndings = ['planks', 'bricks', 'leaves', 'carpet', 'wool', 'fence', 'gate', 'door', 'slab', 'stairs', 'log', 'wood'];
     specialEndings.forEach(ending => {
         const pattern = new RegExp('\\s+' + ending + '$', 'i');
         if (pattern.test(name)) {
             variants.push(name.replace(pattern, '_' + ending));
         }
     });
-
+    
     // Fence gate special case
     variants.push(name.replace(/fence\s+gate/gi, 'fence_gate'));
-
+    
     // First + last word
     const words = name.split(/\s+/);
     if (words.length > 1) {
         variants.push(words[0] + '_' + words[words.length - 1]);
         variants.push(words[0] + words[words.length - 1]);
     }
-
+    
     // Singular to plural
     if (!name.endsWith('s')) {
         variants.push(name.replace(/\s+/g, '_') + 's');
     }
-
-    // Remove duplicates and return
+    
+    // Remove duplicates
     return [...new Set(variants)];
 }
 
@@ -182,7 +176,7 @@ function formatStacks(count) {
 
 function saveCheckboxes() {
     if (typeof litematicBlocks === 'undefined') return;
-
+    
     const checks = {};
     litematicBlocks.forEach(block => {
         checks[block.name] = block.checked;
@@ -197,4 +191,5 @@ window.formatStacks = formatStacks;
 window.saveCheckboxes = saveCheckboxes;
 
 console.log("=== main.js initialization complete ===");
-console.log("Texture sources configured: " + TEXTURE_SOURCES.length);
+console.log("Primary texture source: Your GitHub Pages");
+console.log("Fallback sources: " + (TEXTURE_SOURCES.length - 1));
