@@ -684,11 +684,12 @@
             border-radius: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         ">
-            <span style="
+            <span id="secret-emoji" style="
                 font-size: 80px;
                 margin-bottom: 30px;
                 display: block;
                 animation: wave 2s ease-in-out infinite;
+                cursor: pointer;
             ">👋</span>
             <h1 style="
                 font-size: 42px;
@@ -866,11 +867,37 @@
         document.getElementById('disclaimer-overlay').classList.remove('active');
     });
 
+    // Секретная кнопка - тройной клик по emoji
+    let clickCount = 0;
+    let clickTimer = null;
+
     // Проверка URL параметров
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
         const adminMode = urlParams.has('admin');
+        
+        // Секретная кнопка
+        const emoji = document.getElementById('secret-emoji');
+        if (emoji) {
+            emoji.addEventListener('click', () => {
+                clickCount++;
+                
+                if (clickCount === 1) {
+                    clickTimer = setTimeout(() => {
+                        clickCount = 0;
+                    }, 1000);
+                }
+                
+                if (clickCount === 3) {
+                    clearTimeout(clickTimer);
+                    clickCount = 0;
+                    // Открываем форму загрузки
+                    document.getElementById('welcome-message').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'flex';
+                }
+            });
+        }
         
         // Если есть ?view= - показываем viewer
         if (viewFile) {
