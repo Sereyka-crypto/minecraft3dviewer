@@ -1441,7 +1441,6 @@
         }
     });
 
-    // Touch support for ruler on mobile
     let touchMoved = false;
 
     document.addEventListener('touchstart', (event) => {
@@ -1624,7 +1623,7 @@
 
             document.getElementById('loading').style.display = 'none';
 
-            const shareUrl = window.location.origin + '/?view=' + fileName;
+            const shareUrl = window.location.origin + '/viewer.html?view=' + fileName;
             
             let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
