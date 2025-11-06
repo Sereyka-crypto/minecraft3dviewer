@@ -226,7 +226,6 @@
             .upload-box h3 { font-size: 13px; }
             .upload-box p { font-size: 11px; }
             
-            /* Compact slider at bottom center */
             .layer-slider-container { 
                 bottom: 20px; 
                 padding: 12px 30px;
@@ -241,7 +240,6 @@
             .layer-slider::-webkit-slider-thumb { width: 28px; height: 28px; }
             .layer-slider::-moz-range-thumb { width: 28px; height: 28px; }
             
-            /* Bigger buttons for mobile */
             .arrow-button { 
                 width: 65px; 
                 height: 65px; 
@@ -280,7 +278,6 @@
                 top: 15px;
             }
             
-            /* IMPROVED Materials modal mobile - fullscreen */
             .material-modal { 
                 width: 100%; 
                 height: 100%;
@@ -311,7 +308,6 @@
                 padding: 10px 8px;
             }
             
-            /* Hide Stacks column on mobile portrait */
             .material-table-header > div:nth-child(5) {
                 display: none;
             }
@@ -329,7 +325,6 @@
                 padding: 10px 8px;
             }
             
-            /* Hide Stacks column on mobile portrait */
             .material-item > div:nth-child(5) {
                 display: none;
             }
@@ -342,7 +337,6 @@
             .material-img-container { width: 38px; height: 38px; }
             .material-img { width: 32px; height: 32px; }
             
-            /* Loading spinner */
             .loading { padding: 30px 25px; }
             .spinner { width: 50px; height: 50px; }
             .loading p { font-size: 14px; }
@@ -395,7 +389,6 @@
                 top: 10px;
             }
             
-            /* Ultra compact materials list */
             .material-table-header, .material-item { 
                 grid-template-columns: 35px 40px 1fr 70px;
                 gap: 4px; 
@@ -412,9 +405,7 @@
             .material-img { width: 28px; height: 28px; }
         }
 
-        /* Landscape mobile optimization - FIXED OVERLAPPING */
         @media (max-width: 900px) and (orientation: landscape) {
-            /* Compact UI for landscape */
             .layer-info-top { 
                 top: 5px;
                 font-size: 13px;
@@ -436,7 +427,6 @@
             }
             .icon-button .material-icons { font-size: 22px; }
             
-            /* Material toggle button in bottom left to avoid overlap */
             .material-toggle { 
                 width: 45px; 
                 height: 45px; 
@@ -448,7 +438,6 @@
                 font-size: 24px; 
             }
             
-            /* Right controls moved to top right with smaller size */
             .right-controls { 
                 top: 5px;
                 right: 8px;
@@ -468,7 +457,6 @@
             .layer-slider::-webkit-slider-thumb { width: 24px; height: 24px; }
             .layer-slider::-moz-range-thumb { width: 24px; height: 24px; }
             
-            /* SHOW all columns in landscape including Stacks! */
             .material-modal {
                 width: 100%;
                 height: 100%;
@@ -482,7 +470,6 @@
                 padding: 8px 10px;
             }
             
-            /* SHOW Stacks column in landscape */
             .material-table-header > div:nth-child(5) {
                 display: flex !important;
             }
@@ -494,7 +481,6 @@
                 padding: 8px 10px;
             }
             
-            /* SHOW Stacks column in landscape */
             .material-item > div:nth-child(5) {
                 display: flex !important;
             }
@@ -509,7 +495,6 @@
             .material-img { width: 30px; height: 30px; }
         }
 
-        /* Extra small landscape phones */
         @media (max-width: 700px) and (max-height: 400px) and (orientation: landscape) {
             .layer-info-top { 
                 top: 3px;
@@ -697,15 +682,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        let viewFile = urlParams.get('view'); // Support ?view=model-123
-        
-        // Also support /view/model-123 format
-        if (!viewFile) {
-            const pathMatch = window.location.pathname.match(/\/view\/(.+)/);
-            if (pathMatch) {
-                viewFile = pathMatch[1];
-            }
-        }
+        const viewFile = urlParams.get('view');
         
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
@@ -1647,8 +1624,7 @@
 
             document.getElementById('loading').style.display = 'none';
 
-            // NEW: Use /view/ format for share URL
-            const shareUrl = window.location.origin + '/view/' + fileName;
+            const shareUrl = window.location.origin + '/?view=' + fileName;
             
             let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
@@ -1737,7 +1713,6 @@
         }
     });
 
-    // Handle orientation change on mobile
     addEventListener('orientationchange', () => {
         setTimeout(() => {
             if (camera && renderer) {
