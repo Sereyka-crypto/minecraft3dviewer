@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Minecraft Layer Viewer❤️</title>
+    <title>Minecraft Layer Viewer</title>
+    
+    <!-- Custom favicon -->
+    <link rel="icon" type="image/png" href="/mnt/user-data/uploads/skin-avatar.png">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -169,7 +172,27 @@
         }
         .material-item.checked .material-stacks { text-decoration: line-through; color: rgba(255,255,255,0.35); }
 
-        .material-toggle { position: fixed; left: 30px; top: 30px; background: rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.1); color: white; width: 60px; height: 60px; border-radius: 15px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1500; backdrop-filter: blur(10px); transition: all 0.3s; }
+        .material-toggle { 
+            position: fixed; 
+            left: 30px; 
+            top: 30px; 
+            background: rgba(0,0,0,0.7); 
+            border: 2px solid rgba(255,255,255,0.1); 
+            color: white; 
+            width: 70px; 
+            height: 70px; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1500; 
+            backdrop-filter: blur(10px); 
+            transition: all 0.3s; 
+        }
+        .material-toggle .material-icons { 
+            font-size: 36px; 
+        }
         .material-toggle:hover { background: rgba(102,126,234,0.8); transform: scale(1.1); }
         .material-toggle:active { transform: scale(0.95); }
 
@@ -236,10 +259,13 @@
             .icon-button .material-icons { font-size: 26px; }
             
             .material-toggle { 
-                width: 50px; 
-                height: 50px; 
+                width: 60px; 
+                height: 60px; 
                 left: 15px;
                 top: 15px;
+            }
+            .material-toggle .material-icons { 
+                font-size: 32px; 
             }
             
             .right-controls { 
@@ -285,8 +311,9 @@
                 padding: 10px 8px;
             }
             
+            /* Hide Stacks column on mobile portrait */
             .material-table-header > div:nth-child(5) {
-                display: none; /* Hide Stacks column on mobile */
+                display: none;
             }
             
             .material-list { 
@@ -302,8 +329,9 @@
                 padding: 10px 8px;
             }
             
+            /* Hide Stacks column on mobile portrait */
             .material-item > div:nth-child(5) {
-                display: none; /* Hide Stacks column */
+                display: none;
             }
             
             .material-name { font-size: 13px; word-break: break-word; }
@@ -346,10 +374,13 @@
             .icon-button .material-icons { font-size: 22px; }
             
             .material-toggle { 
-                width: 45px; 
-                height: 45px; 
+                width: 55px; 
+                height: 55px; 
                 left: 10px;
                 top: 10px;
+            }
+            .material-toggle .material-icons { 
+                font-size: 28px; 
             }
             
             .right-controls { 
@@ -382,39 +413,150 @@
         }
 
         /* Landscape mobile optimization */
-        @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+        @media (max-width: 900px) and (orientation: landscape) {
+            /* Compact UI for landscape */
             .layer-info-top { 
-                top: 5px;
+                top: 8px;
                 font-size: 14px;
                 padding: 8px 15px;
             }
             
             .arrow-button { 
-                width: 50px; 
-                height: 50px; 
+                width: 55px; 
+                height: 55px; 
+                top: 50%;
+            }
+            .arrow-button .material-icons { font-size: 36px; }
+            .arrow-left { left: 10px; }
+            .arrow-right { right: 10px; }
+            
+            .icon-button { 
+                width: 48px; 
+                height: 48px; 
+            }
+            .icon-button .material-icons { font-size: 24px; }
+            
+            .material-toggle { 
+                width: 55px; 
+                height: 55px; 
+                left: 10px;
+                top: 8px;
+            }
+            .material-toggle .material-icons { 
+                font-size: 28px; 
+            }
+            
+            .right-controls { 
+                top: 8px;
+                right: 10px;
+                gap: 8px; 
+            }
+            
+            .layer-slider-container { 
+                bottom: 8px;
+                padding: 10px 25px;
+            }
+            
+            .layer-slider { 
+                height: 8px; 
+                width: 55vw; 
+            }
+            .layer-slider::-webkit-slider-thumb { width: 26px; height: 26px; }
+            .layer-slider::-moz-range-thumb { width: 26px; height: 26px; }
+            
+            /* SHOW all columns in landscape including Stacks! */
+            .material-modal {
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+            }
+            
+            .material-table-header {
+                grid-template-columns: 35px 40px 1fr 70px 95px;
+                gap: 6px;
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+            
+            /* SHOW Stacks column in landscape */
+            .material-table-header > div:nth-child(5) {
+                display: flex !important;
+            }
+            
+            .material-item {
+                grid-template-columns: 35px 40px 1fr 70px 95px;
+                gap: 6px;
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+            
+            /* SHOW Stacks column in landscape */
+            .material-item > div:nth-child(5) {
+                display: flex !important;
+            }
+            
+            .material-name { font-size: 12px; }
+            .material-quantity { font-size: 12px; }
+            .material-stacks { font-size: 11px; }
+            
+            .material-checkbox { width: 18px; height: 18px; }
+            
+            .material-img-container { width: 35px; height: 35px; }
+            .material-img { width: 30px; height: 30px; }
+        }
+
+        /* Extra small landscape phones */
+        @media (max-width: 700px) and (max-height: 400px) and (orientation: landscape) {
+            .layer-info-top { 
+                top: 5px;
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+            
+            .arrow-button { 
+                width: 48px; 
+                height: 48px; 
             }
             .arrow-button .material-icons { font-size: 32px; }
             
             .icon-button { 
-                width: 45px; 
-                height: 45px; 
+                width: 42px; 
+                height: 42px; 
             }
+            .icon-button .material-icons { font-size: 22px; }
             
             .material-toggle { 
-                width: 45px; 
-                height: 45px; 
+                width: 50px; 
+                height: 50px; 
+            }
+            .material-toggle .material-icons { 
+                font-size: 26px; 
             }
             
             .right-controls { gap: 6px; }
             
             .layer-slider-container { 
                 bottom: 5px;
-                padding: 10px 20px;
+                padding: 8px 20px;
             }
             
-            .layer-slider { height: 10px; width: 50vw; }
-            .layer-slider::-webkit-slider-thumb { width: 28px; height: 28px; }
-            .layer-slider::-moz-range-thumb { width: 28px; height: 28px; }
+            .layer-slider { height: 6px; width: 50vw; }
+            .layer-slider::-webkit-slider-thumb { width: 24px; height: 24px; }
+            .layer-slider::-moz-range-thumb { width: 24px; height: 24px; }
+            
+            .material-table-header, .material-item {
+                grid-template-columns: 32px 38px 1fr 65px 90px;
+                gap: 5px;
+                font-size: 10px;
+                padding: 7px 8px;
+            }
+            
+            .material-name { font-size: 11px; }
+            .material-quantity { font-size: 11px; }
+            .material-stacks { font-size: 10px; }
+            
+            .material-img-container { width: 32px; height: 32px; }
+            .material-img { width: 28px; height: 28px; }
         }
     </style>
 </head>
@@ -493,13 +635,13 @@
     </div>
 </div>
 
-<button class="material-toggle" id="material-toggle"><span class="material-icons">list</span></button>
+<button class="material-toggle" id="material-toggle" title="Material List"><span class="material-icons">inventory_2</span></button>
 
 <div class="right-controls" id="right-controls">
     <button class="icon-button" id="share-button" title="Share Model"><span class="material-icons">share</span></button>
     <button class="icon-button" id="ruler-toggle" title="Ruler"><span class="material-icons">straighten</span></button>
     <button class="icon-button" id="fov-toggle" title="FOV"><span class="material-icons">photo_camera</span></button>
-    <button class="icon-button" id="reset-camera" title="Reset"><span class="material-icons">refresh</span></button>
+    <button class="icon-button" id="reset-camera" title="Camera Reset"><span class="material-icons">cameraswitch</span></button>
     <button class="icon-button" id="toggle-texture" title="Outline" disabled><span class="material-icons">texture</span></button>
 </div>
 
@@ -1572,6 +1714,17 @@
             camera.updateProjectionMatrix();
             renderer.setSize(innerWidth, innerHeight);
         }
+    });
+
+    // Handle orientation change on mobile
+    addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            if (camera && renderer) {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            }
+        }, 100);
     });
 </script>
 
