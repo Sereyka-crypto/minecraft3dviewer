@@ -697,7 +697,15 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const viewFile = urlParams.get('view');
+        let viewFile = urlParams.get('view'); // Support ?view=model-123
+        
+        // Also support /view/model-123 format
+        if (!viewFile) {
+            const pathMatch = window.location.pathname.match(/\/view\/(.+)/);
+            if (pathMatch) {
+                viewFile = pathMatch[1];
+            }
+        }
         
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
@@ -1639,7 +1647,8 @@
 
             document.getElementById('loading').style.display = 'none';
 
-            const shareUrl = window.location.origin + window.location.pathname + '?view=' + fileName;
+            // NEW: Use /view/ format for share URL
+            const shareUrl = window.location.origin + '/view/' + fileName;
             
             let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
