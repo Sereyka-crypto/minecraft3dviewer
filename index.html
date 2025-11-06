@@ -49,6 +49,97 @@
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #667eea; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        .disclaimer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .disclaimer-overlay.active {
+            display: flex;
+        }
+
+        .disclaimer-modal {
+            background: rgba(30, 30, 35, 0.98);
+            border-radius: 15px;
+            max-width: 550px;
+            width: 100%;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .disclaimer-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .disclaimer-icon {
+            font-size: 24px;
+            color: #fbbf24;
+        }
+
+        .disclaimer-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .disclaimer-content {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .disclaimer-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .disclaimer-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.5);
+        }
+
+        .disclaimer-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 28px;
+            line-height: 1;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .disclaimer-close:hover {
+            color: rgba(255,255,255,1);
+        }
+
         .layer-info-top { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 15px 40px; border-radius: 15px; font-size: 20px; font-weight: 600; z-index: 1000; display: none; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.1); }
 
         .arrow-button { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); color: white; width: 80px; height: 80px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1000; transition: all 0.3s; backdrop-filter: blur(10px); }
@@ -227,6 +318,19 @@
             .subtitle { font-size: 12px; }
             .upload-box { padding: 15px; }
             .upload-box h3 { font-size: 13px; }
+            
+            .disclaimer-modal {
+                max-width: 90%;
+                padding: 25px 20px;
+            }
+
+            .disclaimer-header h2 {
+                font-size: 18px;
+            }
+
+            .disclaimer-content {
+                font-size: 13px;
+            }
             
             .layer-slider-container { 
                 bottom: 20px; 
@@ -658,6 +762,21 @@
     </div>
 </div>
 
+<!-- Disclaimer Modal -->
+<div class="disclaimer-overlay" id="disclaimer-overlay">
+    <div class="disclaimer-modal">
+        <button class="disclaimer-close" id="disclaimer-close">×</button>
+        <div class="disclaimer-header">
+            <span class="disclaimer-icon">⚠️</span>
+            <h2>Please note</h2>
+        </div>
+        <div class="disclaimer-content">
+            This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. This viewer is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
+        </div>
+        <button class="disclaimer-button" id="disclaimer-ok">I Understand</button>
+    </div>
+</div>
+
 <div id="viewer-container"></div>
 <div class="loading" id="loading"><div class="spinner"></div><p>Loading...</p></div>
 
@@ -733,6 +852,20 @@
         "End Gateway"
     ];
 
+    // Функция показа disclaimer
+    function showDisclaimer() {
+        document.getElementById('disclaimer-overlay').classList.add('active');
+    }
+
+    // Закрытие disclaimer
+    document.getElementById('disclaimer-ok').addEventListener('click', () => {
+        document.getElementById('disclaimer-overlay').classList.remove('active');
+    });
+
+    document.getElementById('disclaimer-close').addEventListener('click', () => {
+        document.getElementById('disclaimer-overlay').classList.remove('active');
+    });
+
     // Проверка URL параметров
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -755,6 +888,11 @@
                 .then(async blob => {
                     const file = new File([blob], viewFile + '.mcviewer');
                     await loadSharedModel(file);
+                    
+                    // Показать disclaimer после загрузки
+                    setTimeout(() => {
+                        showDisclaimer();
+                    }, 500);
                     
                     setTimeout(() => {
                         const shareBtn = document.getElementById('share-button');
@@ -1183,6 +1321,11 @@
         document.getElementById('main-content').style.display = 'none';
         if (!scene) initThreeJS();
         await loadModel();
+        
+        // Показать disclaimer после загрузки
+        setTimeout(() => {
+            showDisclaimer();
+        }, 500);
     });
 
     async function loadModel() {
