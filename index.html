@@ -7,9 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>Minecraft Layer Viewer</title>
     
-    <!-- Custom favicon -->
     <link rel="icon" type="image/png" href="/skin-avatar.png">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
@@ -33,7 +31,6 @@
         .upload-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s; }
         .upload-box:hover { border-color: rgba(102,126,234,0.5); background: rgba(102,126,234,0.1); }
         .upload-box h3 { font-size: 14px; margin-bottom: 8px; color: #667eea; font-weight: 600; }
-        .upload-box p { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 15px; line-height: 1.4; }
         .file-status { font-size: 11px; color: #4ade80; margin-top: 10px; min-height: 16px; font-weight: 500; }
         input[type="file"] { display: none; }
         .upload-button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 25px; border-radius: 50px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
@@ -224,7 +221,6 @@
             .subtitle { font-size: 12px; }
             .upload-box { padding: 15px; }
             .upload-box h3 { font-size: 13px; }
-            .upload-box p { font-size: 11px; }
             
             .layer-slider-container { 
                 bottom: 20px; 
@@ -560,39 +556,36 @@
 <body>
 <div id="main-content">
     <div class="upload-container">
-        <h1>🎮 Minecraft Layer Viewer</h1>
-        <p class="subtitle">Load your Minecraft schematics and models</p>
+        <h1>Viewer</h1>
+        <p class="subtitle">Load files</p>
 
         <div class="upload-section" id="upload-section">
             <div class="upload-box">
-                <h3>📦 3D Model</h3>
-                <p>ZIP with OBJ, MTL, textures</p>
+                <h3>File 1</h3>
                 <input type="file" id="model-input" accept=".zip">
                 <label for="model-input" class="upload-button">
                     <span class="material-icons">upload_file</span>
-                    <span>Choose ZIP</span>
+                    <span>Select</span>
                 </label>
                 <div class="file-status" id="model-status"></div>
             </div>
 
             <div class="upload-box">
-                <h3>🏗️ Litematic</h3>
-                <p>Minecraft schematic file</p>
+                <h3>File 2</h3>
                 <input type="file" id="litematic-input" accept=".litematic,.schem,.schematic">
                 <label for="litematic-input" class="upload-button">
                     <span class="material-icons">account_tree</span>
-                    <span>Choose File</span>
+                    <span>Select</span>
                 </label>
                 <div class="file-status" id="litematic-status"></div>
             </div>
 
             <div class="upload-box">
-                <h3>🎨 Outline Textures</h3>
-                <p>Optional PNG textures</p>
+                <h3>File 3</h3>
                 <input type="file" id="texture-input" accept=".png,.jpg,.jpeg" multiple>
                 <label for="texture-input" class="upload-button">
                     <span class="material-icons">collections</span>
-                    <span>Choose PNGs</span>
+                    <span>Select</span>
                 </label>
                 <div class="file-status" id="texture-status"></div>
             </div>
@@ -600,7 +593,7 @@
 
         <button class="load-button" id="load-button">
             <span class="material-icons">play_arrow</span>
-            <span>Load Model</span>
+            <span>Load</span>
         </button>
     </div>
 </div>
@@ -1623,7 +1616,7 @@
 
             document.getElementById('loading').style.display = 'none';
 
-            const shareUrl = window.location.origin + '/viewer.html?view=' + fileName;
+            const shareUrl = window.location.origin + '/?view=' + fileName;
             
             let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
