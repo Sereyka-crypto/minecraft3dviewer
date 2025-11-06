@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Minecraft Layer Viewer🏗️</title>
+    <title>Minecraft Layer Viewer</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -371,8 +371,44 @@
                 await parseLitematic(litematicFile);
             }
 
+            // Load custom textures from share file
+            const customTexturesFolder = zip.folder('custom_textures');
+            if (customTexturesFolder) {
+                customTextures = {};
+                const files = [];
+                customTexturesFolder.forEach((relativePath, file) => {
+                    if (!file.dir) files.push(file);
+                });
+                
+                console.log('📦 Loading', files.length, 'custom textures...');
+                
+                for (const file of files) {
+                    const blob = await file.async('blob');
+                    const fileName = file.name.split('/').pop();
+                    customTextures[fileName] = URL.createObjectURL(blob);
+                    console.log('✅ Loaded texture:', fileName);
+                }
+                
+                if (Object.keys(customTextures).length > 0) {
+                    hasCustomTextures = true;
+                    console.log('🎨 Custom textures loaded:', Object.keys(customTextures).length);
+                }
+            }
+
             if (!scene) initThreeJS();
             await loadModel();
+
+            // Auto-enable custom textures if present
+            if (hasCustomTextures) {
+                isCustomMode = true;
+                applyTextures();
+                const toggleBtn = document.getElementById('toggle-texture');
+                if (toggleBtn) {
+                    toggleBtn.disabled = false;
+                    toggleBtn.classList.add('active');
+                }
+                console.log('🎨 Custom textures applied automatically');
+            }
 
         } catch (error) {
             console.error('Error loading shared model:', error);
@@ -1097,10 +1133,24 @@
                 shareZip.file('litematic.litematic', litematicFile);
             }
 
+            // Save custom textures to share file
+            if (hasCustomTextures && Object.keys(customTextures).length > 0) {
+                console.log('📦 Saving', Object.keys(customTextures).length, 'custom textures...');
+                const texturesFolder = shareZip.folder('custom_textures');
+                for (const [filename, blobUrl] of Object.entries(customTextures)) {
+                    const response = await fetch(blobUrl);
+                    const blob = await response.blob();
+                    texturesFolder.file(filename, blob);
+                    console.log('✅ Saved:', filename);
+                }
+            }
+
             const metadata = {
                 currentLayer: currentLayer,
                 totalLayers: totalLayers,
                 hasLitematic: !!litematicFile,
+                hasCustomTextures: hasCustomTextures,
+                customTexturesCount: Object.keys(customTextures).length,
                 timestamp: Date.now()
             };
             shareZip.file('metadata.json', JSON.stringify(metadata));
@@ -1118,12 +1168,16 @@
 
             const shareUrl = window.location.origin + window.location.pathname + '?view=' + fileName;
             
-            const message = '✅ Share file created!\n\n' +
+            let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
                 '1. Upload ' + fileName + '.mcviewer to /shared/ folder on GitHub\n' +
                 '2. Push changes to GitHub\n' +
                 '3. Share this link:\n\n' +
                 shareUrl;
+            
+            if (hasCustomTextures) {
+                message += '\n\n🎨 Custom textures included: ' + Object.keys(customTextures).length;
+            }
             
             prompt(message, shareUrl);
 
