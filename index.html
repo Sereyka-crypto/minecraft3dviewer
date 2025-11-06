@@ -49,95 +49,84 @@
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #667eea; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .disclaimer-overlay {
+        .disclaimer-notification {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
+            bottom: 30px;
+            left: 30px;
+            background: rgba(30, 30, 35, 0.98);
+            border-radius: 12px;
+            max-width: 400px;
+            width: calc(100% - 60px);
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             z-index: 5000;
             display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            animation: slideInLeft 0.4s ease-out;
         }
 
-        .disclaimer-overlay.active {
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .disclaimer-notification.active {
+            display: block;
+        }
+
+        .disclaimer-notification-header {
             display: flex;
-        }
-
-        .disclaimer-modal {
-            background: rgba(30, 30, 35, 0.98);
-            border-radius: 15px;
-            max-width: 550px;
-            width: 100%;
-            padding: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            position: relative;
-        }
-
-        .disclaimer-header {
-            display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
-        .disclaimer-icon {
-            font-size: 24px;
-            color: #fbbf24;
-        }
-
-        .disclaimer-header h2 {
+        .disclaimer-notification-icon {
             font-size: 20px;
+            color: #fbbf24;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .disclaimer-notification-title {
+            font-size: 16px;
             font-weight: 600;
             color: rgba(255,255,255,0.95);
+            flex: 1;
         }
 
-        .disclaimer-content {
-            color: rgba(255,255,255,0.8);
-            font-size: 14px;
-            line-height: 1.7;
-            margin-bottom: 25px;
-        }
-
-        .disclaimer-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s;
-        }
-
-        .disclaimer-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102,126,234,0.5);
-        }
-
-        .disclaimer-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+        .disclaimer-notification-close {
             background: none;
             border: none;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.5);
             cursor: pointer;
-            font-size: 28px;
+            font-size: 24px;
             line-height: 1;
-            padding: 5px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: color 0.2s;
+            flex-shrink: 0;
         }
 
-        .disclaimer-close:hover {
-            color: rgba(255,255,255,1);
+        .disclaimer-notification-close:hover {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .disclaimer-notification-content {
+            color: rgba(255,255,255,0.75);
+            font-size: 13px;
+            line-height: 1.6;
+            padding-left: 32px;
         }
 
         .layer-info-top { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 15px 40px; border-radius: 15px; font-size: 20px; font-weight: 600; z-index: 1000; display: none; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.1); }
@@ -319,17 +308,20 @@
             .upload-box { padding: 15px; }
             .upload-box h3 { font-size: 13px; }
             
-            .disclaimer-modal {
-                max-width: 90%;
-                padding: 25px 20px;
+            .disclaimer-notification {
+                bottom: 15px;
+                left: 15px;
+                max-width: calc(100% - 30px);
+                padding: 16px;
             }
 
-            .disclaimer-header h2 {
-                font-size: 18px;
+            .disclaimer-notification-title {
+                font-size: 15px;
             }
 
-            .disclaimer-content {
-                font-size: 13px;
+            .disclaimer-notification-content {
+                font-size: 12px;
+                padding-left: 32px;
             }
             
             .layer-slider-container { 
@@ -452,6 +444,13 @@
             h1 { font-size: 20px; }
             .subtitle { font-size: 11px; }
             
+            .disclaimer-notification {
+                bottom: 10px;
+                left: 10px;
+                max-width: calc(100% - 20px);
+                padding: 14px;
+            }
+            
             .layer-slider-container {
                 bottom: 15px;
                 padding: 10px 25px;
@@ -563,6 +562,12 @@
             .layer-slider::-webkit-slider-thumb { width: 24px; height: 24px; }
             .layer-slider::-moz-range-thumb { width: 24px; height: 24px; }
             
+            .disclaimer-notification {
+                bottom: 60px;
+                left: 8px;
+                max-width: 350px;
+            }
+            
             .material-modal {
                 width: 100%;
                 height: 100%;
@@ -646,6 +651,13 @@
             .layer-slider { height: 5px; width: 45vw; }
             .layer-slider::-webkit-slider-thumb { width: 22px; height: 22px; }
             .layer-slider::-moz-range-thumb { width: 22px; height: 22px; }
+            
+            .disclaimer-notification {
+                bottom: 50px;
+                left: 5px;
+                max-width: 300px;
+                padding: 12px;
+            }
             
             .material-table-header, .material-item {
                 grid-template-columns: 30px 35px 1fr 60px 85px;
@@ -763,18 +775,15 @@
     </div>
 </div>
 
-<!-- Disclaimer Modal -->
-<div class="disclaimer-overlay" id="disclaimer-overlay">
-    <div class="disclaimer-modal">
-        <button class="disclaimer-close" id="disclaimer-close">×</button>
-        <div class="disclaimer-header">
-            <span class="disclaimer-icon">⚠️</span>
-            <h2>Please note</h2>
-        </div>
-        <div class="disclaimer-content">
-            This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. This viewer is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
-        </div>
-        <button class="disclaimer-button" id="disclaimer-ok">I Understand</button>
+<!-- Disclaimer Notification (внизу слева) -->
+<div class="disclaimer-notification" id="disclaimer-notification">
+    <div class="disclaimer-notification-header">
+        <span class="disclaimer-notification-icon">⚠️</span>
+        <span class="disclaimer-notification-title">Please note</span>
+        <button class="disclaimer-notification-close" id="disclaimer-close">×</button>
+    </div>
+    <div class="disclaimer-notification-content">
+        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Heybuilds is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
     </div>
 </div>
 
@@ -855,16 +864,12 @@
 
     // Функция показа disclaimer
     function showDisclaimer() {
-        document.getElementById('disclaimer-overlay').classList.add('active');
+        document.getElementById('disclaimer-notification').classList.add('active');
     }
 
     // Закрытие disclaimer
-    document.getElementById('disclaimer-ok').addEventListener('click', () => {
-        document.getElementById('disclaimer-overlay').classList.remove('active');
-    });
-
     document.getElementById('disclaimer-close').addEventListener('click', () => {
-        document.getElementById('disclaimer-overlay').classList.remove('active');
+        document.getElementById('disclaimer-notification').classList.remove('active');
     });
 
     // Секретная кнопка - тройной клик по emoji
