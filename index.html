@@ -41,6 +41,74 @@
         input[type="file"] { display: none; }
         .upload-button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 25px; border-radius: 50px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
         .upload-button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.5); }
+        
+        .camera-settings {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .camera-settings h3 {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .camera-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .camera-control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .camera-control label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .camera-control-value {
+            font-weight: 600;
+            color: #4ade80;
+        }
+        
+        .camera-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .camera-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .camera-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        
         .load-button { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); color: white; padding: 16px 45px; border-radius: 50px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; display: none; margin: 0 auto; transition: all 0.3s; }
         .load-button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(74,222,128,0.5); }
 
@@ -296,6 +364,7 @@
             .upload-container { padding: 30px 20px; }
             h1 { font-size: 24px; }
             .subtitle { font-size: 13px; }
+            .camera-controls { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -307,6 +376,9 @@
             .subtitle { font-size: 12px; }
             .upload-box { padding: 15px; }
             .upload-box h3 { font-size: 13px; }
+            
+            .camera-settings { padding: 15px; }
+            .camera-controls { grid-template-columns: 1fr; gap: 12px; }
             
             .disclaimer-notification {
                 bottom: 15px;
@@ -768,6 +840,27 @@
             </div>
         </div>
 
+        <!-- Camera Settings -->
+        <div class="camera-settings">
+            <h3>Camera Settings</h3>
+            <div class="camera-controls">
+                <div class="camera-control">
+                    <label>
+                        <span>Rotation</span>
+                        <span class="camera-control-value" id="rotation-value">90°</span>
+                    </label>
+                    <input type="range" class="camera-slider" id="rotation-slider" min="0" max="360" value="90">
+                </div>
+                <div class="camera-control">
+                    <label>
+                        <span>Tilt</span>
+                        <span class="camera-control-value" id="tilt-value">60°</span>
+                    </label>
+                    <input type="range" class="camera-slider" id="tilt-slider" min="0" max="90" value="60">
+                </div>
+            </div>
+        </div>
+
         <button class="load-button" id="load-button">
             <span class="material-icons">play_arrow</span>
             <span>Load</span>
@@ -848,6 +941,10 @@
     let mouse = new THREE.Vector2();
     let cameraMovedSinceLastClick = false;
 
+    // Camera settings
+    let cameraRotation = 90;  // azimuth angle in degrees
+    let cameraTilt = 60;      // elevation angle in degrees
+
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
         "Potatoes": "Potato",
@@ -861,6 +958,17 @@
         "End Portal",
         "End Gateway"
     ];
+
+    // Update camera slider values
+    document.getElementById('rotation-slider').addEventListener('input', (e) => {
+        cameraRotation = parseInt(e.target.value);
+        document.getElementById('rotation-value').textContent = cameraRotation + '°';
+    });
+
+    document.getElementById('tilt-slider').addEventListener('input', (e) => {
+        cameraTilt = parseInt(e.target.value);
+        document.getElementById('tilt-value').textContent = cameraTilt + '°';
+    });
 
     // Функция показа disclaimer
     function showDisclaimer() {
@@ -1458,8 +1566,8 @@
             layerHeight = (maxY - minY) / totalLayers;
 
             const distance = maxDim * 1.8;
-            const elevationAngle = 60 * (Math.PI / 180);
-            const azimuthAngle = 90 * (Math.PI / 180);
+            const elevationAngle = cameraTilt * (Math.PI / 180);
+            const azimuthAngle = cameraRotation * (Math.PI / 180);
             const firstLayerY = minY + layerHeight;
             const cameraY = firstLayerY + distance * Math.sin(elevationAngle);
             const horizontalDist = distance * Math.cos(elevationAngle);
