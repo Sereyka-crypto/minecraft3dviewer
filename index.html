@@ -24,36 +24,6 @@
         h1 { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
         .subtitle { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 30px; }
 
-        .view-only-drop-zone {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 5000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        .view-only-drop-zone.active { display: flex; }
-        .drop-zone-content {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 3px dashed rgba(102,126,234,0.5);
-            border-radius: 20px;
-            padding: 60px;
-            text-align: center;
-            max-width: 600px;
-        }
-        .drop-zone-content h2 { font-size: 32px; margin-bottom: 20px; }
-        .drop-zone-content p { font-size: 18px; color: rgba(255,255,255,0.7); margin-bottom: 30px; }
-        .drop-zone-content.drag-over {
-            border-color: #4ade80;
-            background: rgba(74,222,128,0.1);
-        }
-
         .upload-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
         .upload-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s; }
         .upload-box:hover { border-color: rgba(102,126,234,0.5); background: rgba(102,126,234,0.1); }
@@ -273,18 +243,6 @@
     </div>
 </div>
 
-<div class="view-only-drop-zone" id="view-only-drop-zone">
-    <div class="drop-zone-content" id="drop-zone-content">
-        <h2>🎁 Patreon Viewer Mode</h2>
-        <p>Drag & Drop the shared .mcviewer file here to view the model</p>
-        <input type="file" id="shared-file-input" accept=".mcviewer" style="display: none;">
-        <label for="shared-file-input" class="upload-button">
-            <span class="material-icons">folder_open</span>
-            <span>Or Click to Browse</span>
-        </label>
-    </div>
-</div>
-
 <div id="viewer-container"></div>
 <div class="loading" id="loading"><div class="spinner"></div><p>Loading...</p></div>
 
@@ -327,9 +285,6 @@
 </div>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const isViewOnly = urlParams.get('view') === 'patreon';
-
     let scene, camera, renderer, controls;
     let model, allMeshes = [], currentLayer = 1, previousLayer = 1, minY = 0, maxY = 0, totalLayers = 0;
     let modelZip = null, litematicFile = null, defaultTextures = {}, customTextures = {}, textureMap = {}, isCustomMode = false, hasCustomTextures = false;
@@ -363,89 +318,45 @@
         "End Gateway"
     ];
 
-    if (isViewOnly) {
-        document.getElementById('upload-section').style.display = 'none';
-        document.getElementById('load-button').style.display = 'none';
-        document.querySelector('.subtitle').textContent = '🎁 Patreon Exclusive Viewer';
-        document.getElementById('view-only-drop-zone').classList.add('active');
-
-        const dropZone = document.getElementById('drop-zone-content');
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
-        });
-
-        dropZone.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-
-            const file = e.dataTransfer.files[0];
-            if (file && file.name.endsWith('.mcviewer')) {
-                await loadSharedModel(file);
-            } else {
-                alert('Please drop a valid .mcviewer file');
-            }
-        });
-
-        document.getElementById('shared-file-input').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                await loadSharedModel(file);
-            }
-        });
-    }
-
-    document.getElementById('share-button')?.addEventListener('click', async () => {
-        if (!model || !modelZip) {
-            alert('Please load a model first!');
-            return;
-        }
-
-        document.getElementById('loading').style.display = 'block';
-
-        try {
-            const shareZip = new JSZip();
-            shareZip.file('model.zip', modelZip);
-
-            if (litematicFile) {
-                shareZip.file('litematic.litematic', litematicFile);
-            }
-
-            const metadata = {
-                currentLayer: currentLayer,
-                totalLayers: totalLayers,
-                hasLitematic: !!litematicFile,
-                timestamp: Date.now()
-            };
-            shareZip.file('metadata.json', JSON.stringify(metadata));
-
-            const blob = await shareZip.generateAsync({ type: 'blob' });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'model-share.mcviewer';
-            a.click();
-
-            document.getElementById('loading').style.display = 'none';
-
-            alert('✅ Share file created! Send this .mcviewer file to your Patreon subscribers.\n\nThey should open: ' + window.location.origin + window.location.pathname + '?view=patreon');
-
-        } catch (error) {
-            console.error('Share error:', error);
-            alert('Error creating share file');
-            document.getElementById('loading').style.display = 'none';
+    // Auto-load shared model from URL
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewFile = urlParams.get('view');
+        
+        if (viewFile) {
+            console.log('🔗 View mode detected:', viewFile);
+            
+            // Hide upload screen
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            // Load shared file
+            fetch('./shared/' + viewFile + '.mcviewer')
+                .then(response => {
+                    if (!response.ok) throw new Error('File not found');
+                    return response.blob();
+                })
+                .then(async blob => {
+                    const file = new File([blob], viewFile + '.mcviewer');
+                    await loadSharedModel(file);
+                    
+                    // Hide share button in view mode
+                    setTimeout(() => {
+                        const shareBtn = document.getElementById('share-button');
+                        if (shareBtn) shareBtn.style.display = 'none';
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('❌ Load error:', error);
+                    alert('❌ Model not found. Please check the link.');
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'flex';
+                });
         }
     });
 
     async function loadSharedModel(file) {
         document.getElementById('loading').style.display = 'block';
-        document.getElementById('view-only-drop-zone').style.display = 'none';
 
         try {
             const zip = await JSZip.loadAsync(file);
@@ -467,7 +378,6 @@
             console.error('Error loading shared model:', error);
             alert('Error loading shared model. Please make sure the file is valid.');
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('view-only-drop-zone').classList.add('active');
         }
     }
 
@@ -779,44 +689,42 @@
         renderer.render(scene, camera);
     }
 
-    if (!isViewOnly) {
-        document.getElementById('model-input').addEventListener('change', (e) => {
-            if (e.target.files[0]) {
-                modelZip = e.target.files[0];
-                document.getElementById('model-status').textContent = '✓ ' + modelZip.name;
-                document.getElementById('load-button').style.display = 'inline-flex';
-            }
-        });
+    document.getElementById('model-input').addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+            modelZip = e.target.files[0];
+            document.getElementById('model-status').textContent = '✓ ' + modelZip.name;
+            document.getElementById('load-button').style.display = 'inline-flex';
+        }
+    });
 
-        document.getElementById('litematic-input').addEventListener('change', async (e) => {
-            if (e.target.files[0]) {
-                litematicFile = e.target.files[0];
-                document.getElementById('litematic-status').textContent = '✓ ' + litematicFile.name;
-                await parseLitematic(litematicFile);
-                updateMaterialList();
-            }
-        });
+    document.getElementById('litematic-input').addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            litematicFile = e.target.files[0];
+            document.getElementById('litematic-status').textContent = '✓ ' + litematicFile.name;
+            await parseLitematic(litematicFile);
+            updateMaterialList();
+        }
+    });
 
-        document.getElementById('texture-input').addEventListener('change', (e) => {
-            customTextures = {};
-            Array.from(e.target.files).forEach(file => {
-                if (file.type.startsWith('image/')) customTextures[file.name] = URL.createObjectURL(file);
-            });
-            hasCustomTextures = Object.keys(customTextures).length > 0;
-            if (hasCustomTextures) document.getElementById('texture-status').textContent = '✓ ' + Object.keys(customTextures).length + ' files';
+    document.getElementById('texture-input').addEventListener('change', (e) => {
+        customTextures = {};
+        Array.from(e.target.files).forEach(file => {
+            if (file.type.startsWith('image/')) customTextures[file.name] = URL.createObjectURL(file);
         });
+        hasCustomTextures = Object.keys(customTextures).length > 0;
+        if (hasCustomTextures) document.getElementById('texture-status').textContent = '✓ ' + Object.keys(customTextures).length + ' files';
+    });
 
-        document.getElementById('load-button').addEventListener('click', async () => {
-            if (!modelZip) {
-                alert('Please select a 3D model ZIP file!');
-                return;
-            }
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('main-content').style.display = 'none';
-            if (!scene) initThreeJS();
-            await loadModel();
-        });
-    }
+    document.getElementById('load-button').addEventListener('click', async () => {
+        if (!modelZip) {
+            alert('Please select a 3D model ZIP file!');
+            return;
+        }
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('main-content').style.display = 'none';
+        if (!scene) initThreeJS();
+        await loadModel();
+    });
 
     async function loadModel() {
         try {
@@ -957,10 +865,6 @@
             document.getElementById('material-toggle').style.display = 'flex';
             document.getElementById('right-controls').style.display = 'flex';
             document.getElementById('layer-slider-container').style.display = 'block';
-
-            if (isViewOnly) {
-                document.getElementById('share-button').style.display = 'none';
-            }
         } catch (error) {
             alert('Error: ' + error.message);
             console.error(error);
@@ -1175,6 +1079,59 @@
         camera.updateProjectionMatrix();
         const btn = document.getElementById('fov-toggle');
         btn.classList.toggle('active');
+    });
+
+    document.getElementById('share-button')?.addEventListener('click', async () => {
+        if (!model || !modelZip) {
+            alert('Please load a model first!');
+            return;
+        }
+
+        document.getElementById('loading').style.display = 'block';
+
+        try {
+            const shareZip = new JSZip();
+            shareZip.file('model.zip', modelZip);
+
+            if (litematicFile) {
+                shareZip.file('litematic.litematic', litematicFile);
+            }
+
+            const metadata = {
+                currentLayer: currentLayer,
+                totalLayers: totalLayers,
+                hasLitematic: !!litematicFile,
+                timestamp: Date.now()
+            };
+            shareZip.file('metadata.json', JSON.stringify(metadata));
+
+            const blob = await shareZip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            const fileName = 'model-' + Date.now();
+            a.download = fileName + '.mcviewer';
+            a.click();
+
+            document.getElementById('loading').style.display = 'none';
+
+            const shareUrl = window.location.origin + window.location.pathname + '?view=' + fileName;
+            
+            const message = '✅ Share file created!\n\n' +
+                '📝 Instructions:\n' +
+                '1. Upload ' + fileName + '.mcviewer to /shared/ folder on GitHub\n' +
+                '2. Push changes to GitHub\n' +
+                '3. Share this link:\n\n' +
+                shareUrl;
+            
+            prompt(message, shareUrl);
+
+        } catch (error) {
+            console.error('Share error:', error);
+            alert('Error creating share file');
+            document.getElementById('loading').style.display = 'none';
+        }
     });
 
     function updateCameraHeight() {
