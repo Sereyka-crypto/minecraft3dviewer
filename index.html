@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Minecraft Layer Viewer</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,6 +47,7 @@
 
         .arrow-button { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); color: white; width: 80px; height: 80px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1000; transition: all 0.3s; backdrop-filter: blur(10px); }
         .arrow-button:hover { background: rgba(102,126,234,0.8); transform: translateY(-50%) scale(1.1); }
+        .arrow-button:active { transform: translateY(-50%) scale(0.95); }
         .arrow-left { left: 30px; }
         .arrow-right { right: 30px; }
         .arrow-button .material-icons { font-size: 60px; }
@@ -66,8 +69,9 @@
 
         .material-header { padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
         .material-header h2 { font-size: 20px; font-weight: 600; color: rgba(255,255,255,0.95); }
-        .close-modal { background: none; border: none; color: white; cursor: pointer; font-size: 32px; line-height: 1; opacity: 0.7; transition: opacity 0.2s; }
+        .close-modal { background: none; border: none; color: white; cursor: pointer; font-size: 32px; line-height: 1; opacity: 0.7; transition: opacity 0.2s; padding: 0; }
         .close-modal:hover { opacity: 1; }
+        .close-modal:active { transform: scale(0.9); }
 
         .material-table-header {
             display: grid;
@@ -167,31 +171,250 @@
 
         .material-toggle { position: fixed; left: 30px; top: 30px; background: rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.1); color: white; width: 60px; height: 60px; border-radius: 15px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1500; backdrop-filter: blur(10px); transition: all 0.3s; }
         .material-toggle:hover { background: rgba(102,126,234,0.8); transform: scale(1.1); }
+        .material-toggle:active { transform: scale(0.95); }
 
         .right-controls { position: fixed; top: 30px; right: 30px; display: none; flex-direction: column; gap: 15px; z-index: 1000; }
         .icon-button { background: rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.1); color: white; width: 60px; height: 60px; border-radius: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); transition: all 0.3s; }
         .icon-button:hover { background: rgba(102,126,234,0.8); transform: scale(1.1); }
+        .icon-button:active { transform: scale(0.95); }
         .icon-button.active { background: rgba(74,222,128,0.8); border-color: rgba(74,222,128,0.5); }
         .icon-button:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .layer-slider-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 20px 40px; border-radius: 50px; display: none; z-index: 1000; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.1); }
         .layer-slider { width: 400px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.2); outline: none; -webkit-appearance: none; }
         .layer-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #667eea; cursor: pointer; }
+        .layer-slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #667eea; cursor: pointer; border: none; }
+
+        @media (max-width: 1024px) {
+            .upload-section { grid-template-columns: 1fr; gap: 10px; }
+            .upload-container { padding: 30px 20px; }
+            h1 { font-size: 24px; }
+            .subtitle { font-size: 13px; }
+        }
 
         @media (max-width: 768px) {
+            body { font-size: 14px; }
+            
             .upload-section { grid-template-columns: 1fr; }
-            .layer-slider { width: 250px; }
-            .material-modal { width: 95%; max-width: none; }
-            .material-table-header, .material-item { grid-template-columns: 50px 55px 1fr 100px 120px; gap: 10px; font-size: 13px; padding: 10px 15px; }
-            .material-name { font-size: 14px; }
-            .material-quantity { font-size: 14px; }
-            .material-stacks { font-size: 13px; }
-            .material-img-container { width: 40px; height: 40px; }
-            .material-img { width: 32px; height: 32px; }
-            .arrow-button { width: 60px; height: 60px; }
+            .upload-container { padding: 25px 15px; }
+            h1 { font-size: 22px; }
+            .subtitle { font-size: 12px; }
+            .upload-box { padding: 15px; }
+            .upload-box h3 { font-size: 13px; }
+            .upload-box p { font-size: 11px; }
+            
+            /* Compact slider at bottom center */
+            .layer-slider-container { 
+                bottom: 20px; 
+                padding: 12px 30px;
+                border-radius: 30px;
+                background: rgba(0,0,0,0.85);
+            }
+            
+            .layer-slider { 
+                width: 60vw; 
+                height: 6px;
+            }
+            .layer-slider::-webkit-slider-thumb { width: 28px; height: 28px; }
+            .layer-slider::-moz-range-thumb { width: 28px; height: 28px; }
+            
+            /* Bigger buttons for mobile */
+            .arrow-button { 
+                width: 65px; 
+                height: 65px; 
+                border-width: 2px;
+            }
             .arrow-button .material-icons { font-size: 40px; }
             .arrow-left { left: 15px; }
             .arrow-right { right: 15px; }
+            
+            .icon-button { 
+                width: 50px; 
+                height: 50px;
+                border-width: 2px;
+            }
+            .icon-button .material-icons { font-size: 26px; }
+            
+            .material-toggle { 
+                width: 50px; 
+                height: 50px; 
+                left: 15px;
+                top: 15px;
+            }
+            
+            .right-controls { 
+                top: 15px; 
+                right: 15px; 
+                gap: 10px; 
+            }
+            
+            .layer-info-top { 
+                font-size: 16px; 
+                padding: 10px 20px;
+                top: 15px;
+            }
+            
+            /* IMPROVED Materials modal mobile - fullscreen */
+            .material-modal { 
+                width: 100%; 
+                height: 100%;
+                max-width: none;
+                max-height: 100vh;
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .material-header { 
+                padding: 15px 15px; 
+                position: sticky;
+                top: 0;
+                background: rgba(30, 30, 35, 1);
+                z-index: 10;
+            }
+            .material-header h2 { font-size: 18px; }
+            .close-modal { font-size: 32px; padding: 5px 10px; }
+            
+            .material-table-header {
+                position: sticky;
+                top: 59px;
+                z-index: 9;
+                background: rgba(30, 30, 35, 1);
+                grid-template-columns: 40px 45px 1fr 75px;
+                gap: 5px; 
+                font-size: 11px; 
+                padding: 10px 8px;
+            }
+            
+            .material-table-header > div:nth-child(5) {
+                display: none; /* Hide Stacks column on mobile */
+            }
+            
+            .material-list { 
+                max-height: none;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .material-item { 
+                grid-template-columns: 40px 45px 1fr 75px;
+                gap: 5px; 
+                font-size: 12px; 
+                padding: 10px 8px;
+            }
+            
+            .material-item > div:nth-child(5) {
+                display: none; /* Hide Stacks column */
+            }
+            
+            .material-name { font-size: 13px; word-break: break-word; }
+            .material-quantity { font-size: 13px; }
+            
+            .material-checkbox { width: 20px; height: 20px; }
+            
+            .material-img-container { width: 38px; height: 38px; }
+            .material-img { width: 32px; height: 32px; }
+            
+            /* Loading spinner */
+            .loading { padding: 30px 25px; }
+            .spinner { width: 50px; height: 50px; }
+            .loading p { font-size: 14px; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 20px; }
+            .subtitle { font-size: 11px; }
+            
+            .layer-slider-container {
+                bottom: 15px;
+                padding: 10px 25px;
+            }
+            
+            .layer-slider { width: 55vw; }
+            
+            .arrow-button { 
+                width: 55px; 
+                height: 55px; 
+            }
+            .arrow-button .material-icons { font-size: 34px; }
+            .arrow-left { left: 10px; }
+            .arrow-right { right: 10px; }
+            
+            .icon-button { 
+                width: 45px; 
+                height: 45px; 
+            }
+            .icon-button .material-icons { font-size: 22px; }
+            
+            .material-toggle { 
+                width: 45px; 
+                height: 45px; 
+                left: 10px;
+                top: 10px;
+            }
+            
+            .right-controls { 
+                top: 10px; 
+                right: 10px; 
+                gap: 8px; 
+            }
+            
+            .layer-info-top { 
+                font-size: 15px; 
+                padding: 8px 18px;
+                top: 10px;
+            }
+            
+            /* Ultra compact materials list */
+            .material-table-header, .material-item { 
+                grid-template-columns: 35px 40px 1fr 70px;
+                gap: 4px; 
+                font-size: 11px; 
+                padding: 8px 6px;
+            }
+            
+            .material-name { font-size: 12px; }
+            .material-quantity { font-size: 12px; }
+            
+            .material-checkbox { width: 18px; height: 18px; }
+            
+            .material-img-container { width: 35px; height: 35px; }
+            .material-img { width: 28px; height: 28px; }
+        }
+
+        /* Landscape mobile optimization */
+        @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+            .layer-info-top { 
+                top: 5px;
+                font-size: 14px;
+                padding: 8px 15px;
+            }
+            
+            .arrow-button { 
+                width: 50px; 
+                height: 50px; 
+            }
+            .arrow-button .material-icons { font-size: 32px; }
+            
+            .icon-button { 
+                width: 45px; 
+                height: 45px; 
+            }
+            
+            .material-toggle { 
+                width: 45px; 
+                height: 45px; 
+            }
+            
+            .right-controls { gap: 6px; }
+            
+            .layer-slider-container { 
+                bottom: 5px;
+                padding: 10px 20px;
+            }
+            
+            .layer-slider { height: 10px; width: 50vw; }
+            .layer-slider::-webkit-slider-thumb { width: 28px; height: 28px; }
+            .layer-slider::-moz-range-thumb { width: 28px; height: 28px; }
         }
     </style>
 </head>
@@ -318,7 +541,6 @@
         "End Gateway"
     ];
 
-    // Auto-load shared model from URL
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
@@ -326,11 +548,9 @@
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
             
-            // Hide upload screen
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
             
-            // Load shared file
             fetch('./shared/' + viewFile + '.mcviewer')
                 .then(response => {
                     if (!response.ok) throw new Error('File not found');
@@ -340,7 +560,6 @@
                     const file = new File([blob], viewFile + '.mcviewer');
                     await loadSharedModel(file);
                     
-                    // Hide share button in view mode
                     setTimeout(() => {
                         const shareBtn = document.getElementById('share-button');
                         if (shareBtn) shareBtn.style.display = 'none';
@@ -371,7 +590,6 @@
                 await parseLitematic(litematicFile);
             }
 
-            // Load custom textures from share file
             const customTexturesFolder = zip.folder('custom_textures');
             if (customTexturesFolder) {
                 customTextures = {};
@@ -398,7 +616,6 @@
             if (!scene) initThreeJS();
             await loadModel();
 
-            // Auto-enable custom textures if present
             if (hasCustomTextures) {
                 isCustomMode = true;
                 applyTextures();
@@ -911,8 +1128,6 @@
     function updateMaterialList() {
         if (typeof window.createMaterialsList === 'function') {
             window.createMaterialsList(litematicBlocks);
-        } else {
-            console.error('createMaterialsList not found in main.js');
         }
     }
 
@@ -1087,6 +1302,111 @@
         }
     });
 
+    // Touch support for ruler on mobile
+    let touchMoved = false;
+
+    document.addEventListener('touchstart', (event) => {
+        touchMoved = false;
+    });
+
+    document.addEventListener('touchmove', (event) => {
+        if (!renderer || !renderer.domElement) return;
+        touchMoved = true;
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        const touch = event.touches[0];
+        mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
+        const intersects = raycaster.intersectObjects(visibleMeshes, false);
+
+        if (rulerActive && rulerPoints.length < 2) {
+            if (intersects.length > 0) {
+                const rawPoint = intersects[0].point;
+                const snappedPoint = snapToBlockEdge(rawPoint);
+
+                if (rulerPoints.length === 1) {
+                    const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
+                    previewSphere.position.copy(straightPoint);
+                } else {
+                    previewSphere.position.copy(snappedPoint);
+                }
+                previewSphere.visible = true;
+            } else {
+                previewSphere.visible = false;
+            }
+        }
+    });
+
+    document.addEventListener('touchend', (event) => {
+        if (!rulerActive || !renderer || !renderer.domElement || touchMoved) return;
+
+        if (rulerPoints.length >= 2) {
+            if (!cameraMovedSinceLastClick) {
+                clearRuler();
+                previewSphere.visible = false;
+            }
+            cameraMovedSinceLastClick = false;
+            return;
+        }
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        const touch = event.changedTouches[0];
+        mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
+        const intersects = raycaster.intersectObjects(visibleMeshes, false);
+
+        if (intersects.length > 0) {
+            const rawPoint = intersects[0].point;
+            const snappedPoint = snapToBlockEdge(rawPoint);
+
+            let finalPoint = snappedPoint;
+
+            if (rulerPoints.length === 1) {
+                finalPoint = getStraightLine(rulerPoints[0], snappedPoint);
+            }
+
+            rulerPoints.push(finalPoint);
+
+            const sphereGeom = new THREE.SphereGeometry(0.3, 8, 8);
+            const sphereMat = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false });
+            const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+            sphere.position.copy(finalPoint);
+            sphere.renderOrder = 999;
+            scene.add(sphere);
+            rulerSpheres.push(sphere);
+
+            if (rulerPoints.length === 2) {
+                previewSphere.visible = false;
+
+                const lineGeom = new THREE.BufferGeometry().setFromPoints(rulerPoints);
+                const lineMat = new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                    linewidth: 2,
+                    depthTest: false
+                });
+                rulerLine = new THREE.Line(lineGeom, lineMat);
+                rulerLine.renderOrder = 998;
+                scene.add(rulerLine);
+
+                const distance = manhattanDistance(rulerPoints[0], rulerPoints[1]);
+
+                const midPoint = new THREE.Vector3().addVectors(rulerPoints[0], rulerPoints[1]).multiplyScalar(0.5);
+                rulerTextSprite = createTextSprite(distance.toString());
+                rulerTextSprite.position.copy(midPoint);
+                rulerTextSprite.position.y += 2;
+                scene.add(rulerTextSprite);
+
+                cameraMovedSinceLastClick = false;
+            }
+        }
+    });
+
     document.getElementById('toggle-texture').addEventListener('click', () => {
         if (!hasCustomTextures) return;
         isCustomMode = !isCustomMode;
@@ -1133,7 +1453,6 @@
                 shareZip.file('litematic.litematic', litematicFile);
             }
 
-            // Save custom textures to share file
             if (hasCustomTextures && Object.keys(customTextures).length > 0) {
                 console.log('📦 Saving', Object.keys(customTextures).length, 'custom textures...');
                 const texturesFolder = shareZip.folder('custom_textures');
