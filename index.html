@@ -22,6 +22,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #fff; overflow: hidden; height: 100vh; touch-action: none; }
 
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
+        }
+
         #main-content { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px; }
         .upload-container { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 2px dashed rgba(255,255,255,0.2); border-radius: 20px; padding: 40px; max-width: 900px; width: 95%; }
         h1 { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
@@ -554,7 +560,61 @@
     </style>
 </head>
 <body>
-<div id="main-content">
+
+<!-- Вежливое сообщение для случайных посетителей -->
+<div id="welcome-message" style="display: none;">
+    <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    ">
+        <div style="
+            text-align: center;
+            max-width: 700px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 60px 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        ">
+            <span style="
+                font-size: 80px;
+                margin-bottom: 30px;
+                display: block;
+                animation: wave 2s ease-in-out infinite;
+            ">👋</span>
+            <h1 style="
+                font-size: 42px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            ">Hello there!</h1>
+            <p style="
+                font-size: 18px;
+                opacity: 0.95;
+                line-height: 1.8;
+                margin-bottom: 15px;
+            ">This is a <span style="font-weight: 600; color: #ffd700;">private workspace</span> for Sereyka's projects.</p>
+            <p style="
+                font-size: 18px;
+                opacity: 0.95;
+                line-height: 1.8;
+                margin-bottom: 15px;
+            ">If you received a link to view a specific model, please use that direct link instead.</p>
+            <p style="
+                margin-top: 30px;
+                font-size: 16px;
+                opacity: 0.8;
+            ">Have a great day! 😊</p>
+        </div>
+    </div>
+</div>
+
+<!-- Форма загрузки (скрыта по умолчанию) -->
+<div id="main-content" style="display: none;">
     <div class="upload-container">
         <h1>Viewer</h1>
         <p class="subtitle">Load files</p>
@@ -673,14 +733,18 @@
         "End Gateway"
     ];
 
+    // Проверка URL параметров
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
+        const adminMode = urlParams.has('admin');
         
+        // Если есть ?view= - показываем viewer
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
             
             document.getElementById('main-content').style.display = 'none';
+            document.getElementById('welcome-message').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
             
             fetch('./shared/' + viewFile + '.mcviewer')
@@ -703,6 +767,16 @@
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 });
+        }
+        // Если есть ?admin - показываем форму загрузки
+        else if (adminMode) {
+            document.getElementById('welcome-message').style.display = 'none';
+            document.getElementById('main-content').style.display = 'flex';
+        }
+        // По умолчанию - показываем вежливое сообщение
+        else {
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('welcome-message').style.display = 'block';
         }
     });
 
