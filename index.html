@@ -1,6 +1,3 @@
-80.51 KB •2,102 lines
-•
-Formatting may be inconsistent from source
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,18 +5,32 @@ Formatting may be inconsistent from source
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Minecraft Layer Viewer⚒️</title>
+    <title>Minecraft Layer Viewer⚒️1</title>
     
     <link rel="icon" type="image/png" href="/skin-avatar.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- 🚀 ОПТИМИЗАЦИЯ: Preconnect для ускорения -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- 🚀 ОПТИМИЗАЦИЯ: Async загрузка шрифтов -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    </noscript>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <!-- 🚀 ОПТИМИЗАЦИЯ: Скрипты с defer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" defer></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -286,6 +297,8 @@ Formatting may be inconsistent from source
             align-items: center;
             justify-content: center;
         }
+        
+        /* 🚀 ОПТИМИЗАЦИЯ: Lazy loading для изображений */
         .material-img {
             width: 40px;
             height: 40px;
@@ -752,7 +765,6 @@ Formatting may be inconsistent from source
 </head>
 <body>
 
-<!-- Вежливое сообщение для случайных посетителей -->
 <div id="welcome-message" style="display: none;">
     <div style="
         display: flex;
@@ -805,7 +817,6 @@ Formatting may be inconsistent from source
     </div>
 </div>
 
-<!-- Форма загрузки (скрыта по умолчанию) -->
 <div id="main-content" style="display: none;">
     <div class="upload-container">
         <h1>Viewer</h1>
@@ -843,7 +854,6 @@ Formatting may be inconsistent from source
             </div>
         </div>
 
-        <!-- Camera Settings -->
         <div class="camera-settings">
             <h3>Camera Settings</h3>
             <div class="camera-controls">
@@ -871,7 +881,6 @@ Formatting may be inconsistent from source
     </div>
 </div>
 
-<!-- Disclaimer Notification (внизу слева) -->
 <div class="disclaimer-notification" id="disclaimer-notification">
     <div class="disclaimer-notification-header">
         <span class="disclaimer-notification-icon">⚠️</span>
@@ -944,9 +953,8 @@ Formatting may be inconsistent from source
     let mouse = new THREE.Vector2();
     let cameraMovedSinceLastClick = false;
 
-    // Camera settings
-    let cameraRotation = 90;  // azimuth angle in degrees
-    let cameraTilt = 60;      // elevation angle in degrees
+    let cameraRotation = 90;
+    let cameraTilt = 60;
 
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
@@ -962,7 +970,6 @@ Formatting may be inconsistent from source
         "End Gateway"
     ];
 
-    // Update camera slider values
     document.getElementById('rotation-slider').addEventListener('input', (e) => {
         cameraRotation = parseInt(e.target.value);
         document.getElementById('rotation-value').textContent = cameraRotation + '°';
@@ -973,27 +980,22 @@ Formatting may be inconsistent from source
         document.getElementById('tilt-value').textContent = cameraTilt + '°';
     });
 
-    // Функция показа disclaimer
     function showDisclaimer() {
         document.getElementById('disclaimer-notification').classList.add('active');
     }
 
-    // Закрытие disclaimer
     document.getElementById('disclaimer-close').addEventListener('click', () => {
         document.getElementById('disclaimer-notification').classList.remove('active');
     });
 
-    // Секретная кнопка - тройной клик по emoji
     let clickCount = 0;
     let clickTimer = null;
 
-    // Проверка URL параметров
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
         const adminMode = urlParams.has('admin');
         
-        // Секретная кнопка
         const emoji = document.getElementById('secret-emoji');
         if (emoji) {
             emoji.addEventListener('click', () => {
@@ -1008,14 +1010,12 @@ Formatting may be inconsistent from source
                 if (clickCount === 3) {
                     clearTimeout(clickTimer);
                     clickCount = 0;
-                    // Открываем форму загрузки
                     document.getElementById('welcome-message').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 }
             });
         }
         
-        // Если есть ?view= - показываем viewer
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
             
@@ -1032,7 +1032,6 @@ Formatting may be inconsistent from source
                     const file = new File([blob], viewFile + '.mcviewer');
                     await loadSharedModel(file);
                     
-                    // Показать disclaimer после загрузки
                     setTimeout(() => {
                         showDisclaimer();
                     }, 500);
@@ -1049,12 +1048,10 @@ Formatting may be inconsistent from source
                     document.getElementById('main-content').style.display = 'flex';
                 });
         }
-        // Если есть ?admin - показываем форму загрузки
         else if (adminMode) {
             document.getElementById('welcome-message').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
         }
-        // По умолчанию - показываем вежливое сообщение
         else {
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'block';
@@ -1465,7 +1462,6 @@ Formatting may be inconsistent from source
         if (!scene) initThreeJS();
         await loadModel();
         
-        // Показать disclaimer после загрузки
         setTimeout(() => {
             showDisclaimer();
         }, 500);
@@ -1524,7 +1520,6 @@ Formatting may be inconsistent from source
                 mtls.preload();
                 for (const [, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
-                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
                     mat.transparent = false;
                     mat.depthWrite = true;
                     mat.alphaTest = 0;
@@ -1556,7 +1551,6 @@ Formatting may be inconsistent from source
                         if (Array.isArray(child.material)) {
                             child.material.forEach(m => {
                                 m.side = THREE.DoubleSide;
-                                // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
                                 m.transparent = false;
                                 m.depthWrite = true;
                                 m.alphaTest = 0;
@@ -1564,7 +1558,6 @@ Formatting may be inconsistent from source
                             });
                         } else {
                             child.material.side = THREE.DoubleSide;
-                            // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
                             child.material.transparent = false;
                             child.material.depthWrite = true;
                             child.material.alphaTest = 0;
@@ -1657,7 +1650,6 @@ Formatting may be inconsistent from source
                     texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
                     mat.map = texture;
                     
-                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
                     mat.transparent = false;
                     mat.depthWrite = true;
                     mat.alphaTest = 0;
