@@ -813,6 +813,7 @@
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
 
+            // ⚡ ОПТИМИЗАЦИЯ 1: Улучшенный Frustum Culling + Matrix Freeze
             model.traverse(child => {
                 if (child.isMesh) {
                     allMeshes.push(child);
@@ -822,6 +823,12 @@
                     child.getWorldPosition(worldPos);
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
+                    
+                    // ⚡ НОВАЯ ОПТИМИЗАЦИЯ - отключаем автообновление матриц (объекты статичны)
+                    child.frustumCulled = true;
+                    child.matrixAutoUpdate = false;
+                    child.updateMatrix();
+                    
                     if (child.material) {
                         if (Array.isArray(child.material)) {
                             child.material.forEach(m => {
@@ -839,7 +846,6 @@
                             child.material.opacity = 1.0;
                         }
                     }
-                    child.frustumCulled = true;
                 }
             });
 
@@ -1298,13 +1304,28 @@
         animating = true;
     }
 
+    // ⚡ ОПТИМИЗАЦИЯ 3: Улучшенная видимость слоев
     function updateVisibility() {
         const currentMaxY = minY + currentLayer;
-        allMeshes.forEach(mesh => {
+        let visibleCount = 0;
+        
+        for (let i = 0; i < allMeshes.length; i++) {
+            const mesh = allMeshes[i];
             const worldPos = new THREE.Vector3();
             mesh.getWorldPosition(worldPos);
-            mesh.visible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
-        });
+            
+            const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+            
+            if (mesh.visible !== shouldBeVisible) {
+                mesh.visible = shouldBeVisible;
+            }
+            
+            if (shouldBeVisible) {
+                visibleCount++;
+            }
+        }
+        
+        console.log('📊 Visible blocks:', visibleCount, '/', allMeshes.length);
     }
 
     function updateLayerDisplay() {
