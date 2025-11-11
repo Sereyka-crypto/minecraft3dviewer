@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Minecraft Layer Viewer5⚒️</title>
+    <title>Minecraft Layer Viewer3⚒️</title>
     
     <link rel="icon" type="image/png" href="/skin-avatar.png">
     
@@ -24,13 +24,11 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </noscript>
 
-    <!-- ⚠️ ИСПРАВЛЕНИЕ: Three.js БЕЗ defer (должен загружаться синхронно) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
-    <!-- 🚀 ОПТИМИЗАЦИЯ: Эти библиотеки можно загружать с defer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" defer></script>
 
@@ -198,6 +196,7 @@
 
 <div class="right-controls" id="right-controls">
     <button class="icon-button" id="share-button" title="Share Model"><span class="material-icons">share</span></button>
+    <button class="icon-button" id="current-layer-only" title="Show Current Layer Only"><span class="material-icons">layers</span></button>
     <button class="icon-button" id="ruler-toggle" title="Ruler"><span class="material-icons">straighten</span></button>
     <button class="icon-button" id="fov-toggle" title="FOV"><span class="material-icons">photo_camera</span></button>
     <button class="icon-button" id="reset-camera" title="Camera Reset"><span class="material-icons">cameraswitch</span></button>
@@ -230,6 +229,9 @@
 
     let cameraRotation = 90;
     let cameraTilt = 60;
+    
+    // ⚡ НОВАЯ ПЕРЕМЕННАЯ для режима "только текущий слой"
+    let showCurrentLayerOnly = false;
 
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
@@ -813,7 +815,6 @@
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
 
-            // ⚡ ОПТИМИЗАЦИЯ 1: Улучшенный Frustum Culling + Matrix Freeze
             model.traverse(child => {
                 if (child.isMesh) {
                     allMeshes.push(child);
@@ -824,7 +825,7 @@
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
                     
-                    // ⚡ НОВАЯ ОПТИМИЗАЦИЯ - отключаем автообновление матриц (объекты статичны)
+                    // ⚡ ОПТИМИЗАЦИЯ
                     child.frustumCulled = true;
                     child.matrixAutoUpdate = false;
                     child.updateMatrix();
@@ -1304,33 +1305,64 @@
         animating = true;
     }
 
-    // ⚡ ОПТИМИЗАЦИЯ 3: Улучшенная видимость слоев
+    // ⚡ НОВАЯ ФУНКЦИЯ с поддержкой "Только текущий слой"
     function updateVisibility() {
-        const currentMaxY = minY + currentLayer;
-        let visibleCount = 0;
-        
-        for (let i = 0; i < allMeshes.length; i++) {
-            const mesh = allMeshes[i];
-            const worldPos = new THREE.Vector3();
-            mesh.getWorldPosition(worldPos);
+        if (showCurrentLayerOnly) {
+            // Режим "Только текущий слой"
+            const currentMinY = minY + (currentLayer - 1) * layerHeight;
+            const currentMaxY = minY + currentLayer * layerHeight;
             
-            const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+            let visibleCount = 0;
+            allMeshes.forEach(mesh => {
+                const worldPos = new THREE.Vector3();
+                mesh.getWorldPosition(worldPos);
+                const meshY = worldPos.y + mesh.geometry.boundingBox.max.y;
+                
+                // Показываем только блоки текущего слоя
+                const isInCurrentLayer = meshY > currentMinY && meshY <= currentMaxY + 0.1;
+                mesh.visible = isInCurrentLayer;
+                if (isInCurrentLayer) visibleCount++;
+            });
             
-            if (mesh.visible !== shouldBeVisible) {
+            console.log('🔷 Только слой', currentLayer, '- видимо:', visibleCount, 'блоков');
+        } else {
+            // Обычный режим "Все слои до текущего"
+            const currentMaxY = minY + currentLayer * layerHeight;
+            let visibleCount = 0;
+            
+            allMeshes.forEach(mesh => {
+                const worldPos = new THREE.Vector3();
+                mesh.getWorldPosition(worldPos);
+                const meshY = worldPos.y + mesh.geometry.boundingBox.max.y;
+                
+                const shouldBeVisible = meshY <= currentMaxY + 0.1;
                 mesh.visible = shouldBeVisible;
-            }
+                if (shouldBeVisible) visibleCount++;
+            });
             
-            if (shouldBeVisible) {
-                visibleCount++;
-            }
+            console.log('📊 Слои 1-' + currentLayer, '- видимо:', visibleCount, 'блоков');
         }
-        
-        console.log('📊 Visible blocks:', visibleCount, '/', allMeshes.length);
     }
 
     function updateLayerDisplay() {
         document.getElementById('layer-info-top').textContent = 'Layer ' + currentLayer + ' / ' + totalLayers;
     }
+
+    // ⚡ КНОПКА "Показать только текущий слой"
+    document.getElementById('current-layer-only').addEventListener('click', () => {
+        showCurrentLayerOnly = !showCurrentLayerOnly;
+        const btn = document.getElementById('current-layer-only');
+        
+        if (showCurrentLayerOnly) {
+            btn.classList.add('active');
+            btn.title = 'Show All Layers (Click to toggle)';
+        } else {
+            btn.classList.remove('active');
+            btn.title = 'Show Current Layer Only';
+        }
+        
+        updateVisibility();
+    });
 
     document.getElementById('layer-slider').addEventListener('input', (e) => {
         currentLayer = parseInt(e.target.value);
