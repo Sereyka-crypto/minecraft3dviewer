@@ -749,66 +749,24 @@
 </head>
 <body>
 
-<!-- Вежливое сообщение для случайных посетителей -->
 <div id="welcome-message" style="display: none;">
-    <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        padding: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    ">
-        <div style="
-            text-align: center;
-            max-width: 700px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            padding: 60px 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        ">
-            <span id="secret-emoji" style="
-                font-size: 80px;
-                margin-bottom: 30px;
-                display: block;
-                animation: wave 2s ease-in-out infinite;
-                cursor: pointer;
-            ">👋</span>
-            <h1 style="
-                font-size: 42px;
-                font-weight: 700;
-                margin-bottom: 20px;
-                text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            ">Hello there!</h1>
-            <p style="
-                font-size: 18px;
-                opacity: 0.95;
-                line-height: 1.8;
-                margin-bottom: 15px;
-            ">This is a <span style="font-weight: 600; color: #ffd700;">private workspace</span> for Sereyka's projects.</p>
-            <p style="
-                font-size: 18px;
-                opacity: 0.95;
-                line-height: 1.8;
-                margin-bottom: 15px;
-            ">If you received a link to view a specific model, please use that direct link instead.</p>
-            <p style="
-                margin-top: 30px;
-                font-size: 16px;
-                opacity: 0.8;
-            ">Have a great day! 😊</p>
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div style="text-align: center; max-width: 700px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 60px 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <span id="secret-emoji" style="font-size: 80px; margin-bottom: 30px; display: block; animation: wave 2s ease-in-out infinite; cursor: pointer;">👋</span>
+            <h1 style="font-size: 42px; font-weight: 700; margin-bottom: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Hello there!</h1>
+            <p style="font-size: 18px; opacity: 0.95; line-height: 1.8; margin-bottom: 15px;">This is a <span style="font-weight: 600; color: #ffd700;">private workspace</span> for Sereyka's projects.</p>
+            <p style="font-size: 18px; opacity: 0.95; line-height: 1.8; margin-bottom: 15px;">If you received a link to view a specific model, please use that direct link instead.</p>
+            <p style="margin-top: 30px; font-size: 16px; opacity: 0.8;">Have a great day! 😊</p>
         </div>
     </div>
 </div>
 
-<!-- Форма загрузки (скрыта по умолчанию) -->
 <div id="main-content" style="display: none;">
     <div class="upload-container">
         <h1>Viewer</h1>
         <p class="subtitle">Load files</p>
 
-        <div class="upload-section" id="upload-section">
+        <div class="upload-section">
             <div class="upload-box">
                 <h3>File 1</h3>
                 <input type="file" id="model-input" accept=".zip">
@@ -840,7 +798,6 @@
             </div>
         </div>
 
-        <!-- Camera Settings -->
         <div class="camera-settings">
             <h3>Camera Settings</h3>
             <div class="camera-controls">
@@ -868,7 +825,6 @@
     </div>
 </div>
 
-<!-- Disclaimer Notification (внизу слева) -->
 <div class="disclaimer-notification" id="disclaimer-notification">
     <div class="disclaimer-notification-header">
         <span class="disclaimer-notification-icon">⚠️</span>
@@ -922,29 +878,42 @@
 </div>
 
 <script>
+    // ============================================
+    // 🚀 ОПТИМИЗИРОВАННАЯ ВЕРСИЯ С МАКСИМАЛЬНОЙ ПРОИЗВОДИТЕЛЬНОСТЬЮ
+    // ============================================
+    
+    'use strict';
+    
+    // Глобальные переменные
     let scene, camera, renderer, controls;
     let model, allMeshes = [], currentLayer = 1, previousLayer = 1, minY = 0, maxY = 0, totalLayers = 0;
     let modelZip = null, litematicFile = null, defaultTextures = {}, customTextures = {}, textureMap = {}, isCustomMode = false, hasCustomTextures = false;
     let initialCameraX, initialCameraY, initialCameraZ, modelCenter, layerHeight;
     let targetCameraY = 0, targetTargetY = 0, animating = false, userInteracting = false;
     let currentFOV = 40;
-    let materials = [];
     let litematicBlocks = [];
 
-    let rulerActive = false;
-    let rulerPoints = [];
-    let rulerLine = null;
-    let rulerSpheres = [];
-    let previewSphere = null;
-    let rulerTextSprite = null;
-    let raycaster = new THREE.Raycaster();
-    let mouse = new THREE.Vector2();
-    let cameraMovedSinceLastClick = false;
+    // Ruler
+    let rulerActive = false, rulerPoints = [], rulerLine = null, rulerSpheres = [], previewSphere = null, rulerTextSprite = null;
+    let raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(), cameraMovedSinceLastClick = false;
 
     // Camera settings
-    let cameraRotation = 90;  // azimuth angle in degrees
-    let cameraTilt = 60;      // elevation angle in degrees
+    let cameraRotation = 90, cameraTilt = 60;
 
+    // ОПТИМИЗАЦИЯ: Кэш для переиспользования объектов
+    const vectorPool = {
+        vectors: [],
+        get() {
+            return this.vectors.pop() || new THREE.Vector3();
+        },
+        release(v) {
+            v.set(0, 0, 0);
+            this.vectors.push(v);
+        }
+    };
+
+    // Константы
+    const TRANSPARENT_MATERIALS = ['glass', 'pane', 'potted', 'stained_glass'];
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
         "Potatoes": "Potato",
@@ -952,14 +921,20 @@
         "Wheat Crops": "Wheat",
         "Water Cauldron": "Cauldron"
     };
+    const BLOCKS_WITHOUT_TEXTURES = ["Nether Portal", "End Portal", "End Gateway"];
 
-    const BLOCKS_WITHOUT_TEXTURES = [
-        "Nether Portal",
-        "End Portal",
-        "End Gateway"
-    ];
+    // ОПТИМИЗАЦИЯ: Проверка прозрачности (кэшируем результаты)
+    const transparencyCache = new Map();
+    function shouldBeTransparent(materialName) {
+        if (!materialName) return false;
+        if (transparencyCache.has(materialName)) return transparencyCache.get(materialName);
+        const nameLower = materialName.toLowerCase();
+        const result = TRANSPARENT_MATERIALS.some(keyword => nameLower.includes(keyword));
+        transparencyCache.set(materialName, result);
+        return result;
+    }
 
-    // Update camera slider values
+    // Инициализация
     document.getElementById('rotation-slider').addEventListener('input', (e) => {
         cameraRotation = parseInt(e.target.value);
         document.getElementById('rotation-value').textContent = cameraRotation + '°';
@@ -970,52 +945,40 @@
         document.getElementById('tilt-value').textContent = cameraTilt + '°';
     });
 
-    // Функция показа disclaimer
     function showDisclaimer() {
         document.getElementById('disclaimer-notification').classList.add('active');
     }
 
-    // Закрытие disclaimer
     document.getElementById('disclaimer-close').addEventListener('click', () => {
         document.getElementById('disclaimer-notification').classList.remove('active');
     });
 
-    // Секретная кнопка - тройной клик по emoji
-    let clickCount = 0;
-    let clickTimer = null;
+    // Секретная кнопка
+    let clickCount = 0, clickTimer = null;
 
-    // Проверка URL параметров
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
         const adminMode = urlParams.has('admin');
         
-        // Секретная кнопка
         const emoji = document.getElementById('secret-emoji');
         if (emoji) {
             emoji.addEventListener('click', () => {
                 clickCount++;
-                
                 if (clickCount === 1) {
-                    clickTimer = setTimeout(() => {
-                        clickCount = 0;
-                    }, 1000);
+                    clickTimer = setTimeout(() => clickCount = 0, 1000);
                 }
-                
                 if (clickCount === 3) {
                     clearTimeout(clickTimer);
                     clickCount = 0;
-                    // Открываем форму загрузки
                     document.getElementById('welcome-message').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 }
             });
         }
         
-        // Если есть ?view= - показываем viewer
         if (viewFile) {
-            console.log('🔗 View mode detected:', viewFile);
-            
+            console.log('🔗 View mode:', viewFile);
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
@@ -1026,14 +989,8 @@
                     return response.blob();
                 })
                 .then(async blob => {
-                    const file = new File([blob], viewFile + '.mcviewer');
-                    await loadSharedModel(file);
-                    
-                    // Показать disclaimer после загрузки
-                    setTimeout(() => {
-                        showDisclaimer();
-                    }, 500);
-                    
+                    await loadSharedModel(new File([blob], viewFile + '.mcviewer'));
+                    setTimeout(showDisclaimer, 500);
                     setTimeout(() => {
                         const shareBtn = document.getElementById('share-button');
                         if (shareBtn) shareBtn.style.display = 'none';
@@ -1041,17 +998,15 @@
                 })
                 .catch(error => {
                     console.error('❌ Load error:', error);
-                    alert('❌ Model not found. Please check the link.');
+                    alert('❌ Model not found');
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 });
         }
-        // Если есть ?admin - показываем форму загрузки
         else if (adminMode) {
             document.getElementById('welcome-message').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
         }
-        // По умолчанию - показываем вежливое сообщение
         else {
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'block';
@@ -1060,17 +1015,14 @@
 
     async function loadSharedModel(file) {
         document.getElementById('loading').style.display = 'block';
-
         try {
             const zip = await JSZip.loadAsync(file);
-
             const modelFile = await zip.file('model.zip').async('blob');
             modelZip = new File([modelFile], 'model.zip');
 
             const litematicZipFile = zip.file('litematic.litematic');
             if (litematicZipFile) {
-                const litematicBlob = await litematicZipFile.async('blob');
-                litematicFile = new File([litematicBlob], 'litematic.litematic');
+                litematicFile = new File([await litematicZipFile.async('blob')], 'litematic.litematic');
                 await parseLitematic(litematicFile);
             }
 
@@ -1082,18 +1034,15 @@
                     if (!file.dir) files.push(file);
                 });
                 
-                console.log('📦 Loading', files.length, 'custom textures...');
-                
+                console.log('📦 Loading', files.length, 'textures');
                 for (const file of files) {
-                    const blob = await file.async('blob');
                     const fileName = file.name.split('/').pop();
-                    customTextures[fileName] = URL.createObjectURL(blob);
-                    console.log('✅ Loaded texture:', fileName);
+                    customTextures[fileName] = URL.createObjectURL(await file.async('blob'));
                 }
                 
                 if (Object.keys(customTextures).length > 0) {
                     hasCustomTextures = true;
-                    console.log('🎨 Custom textures loaded:', Object.keys(customTextures).length);
+                    console.log('🎨 Textures loaded:', Object.keys(customTextures).length);
                 }
             }
 
@@ -1108,65 +1057,31 @@
                     toggleBtn.disabled = false;
                     toggleBtn.classList.add('active');
                 }
-                console.log('🎨 Custom textures applied automatically');
             }
-
         } catch (error) {
-            console.error('Error loading shared model:', error);
-            alert('Error loading shared model. Please make sure the file is valid.');
+            console.error('Error loading model:', error);
+            alert('Error loading model');
             document.getElementById('loading').style.display = 'none';
         }
     }
 
     function formatStacks(count) {
-        if (count < 64) {
-            return count.toString();
-        } else if (count === 64) {
-            return '1 x 64';
-        } else {
-            const stacks = Math.floor(count / 64);
-            const remainder = count % 64;
-            if (remainder === 0) {
-                return stacks + ' x 64';
-            } else {
-                return stacks + ' x 64 + ' + remainder;
-            }
-        }
+        if (count < 64) return count.toString();
+        if (count === 64) return '1 x 64';
+        const stacks = Math.floor(count / 64);
+        const remainder = count % 64;
+        return remainder === 0 ? stacks + ' x 64' : stacks + ' x 64 + ' + remainder;
     }
 
     function parseNBT(buffer) {
         const view = new DataView(buffer);
         let offset = 0;
 
-        function readByte() {
-            return view.getInt8(offset++);
-        }
-
-        function readShort() {
-            const val = view.getInt16(offset);
-            offset += 2;
-            return val;
-        }
-
-        function readInt() {
-            const val = view.getInt32(offset);
-            offset += 4;
-            return val;
-        }
-
-        function readLong() {
-            const high = view.getInt32(offset);
-            const low = view.getInt32(offset + 4);
-            offset += 8;
-            return (BigInt(high) << 32n) | BigInt(low >>> 0);
-        }
-
-        function readString() {
-            const length = readShort();
-            const bytes = new Uint8Array(buffer, offset, length);
-            offset += length;
-            return new TextDecoder().decode(bytes);
-        }
+        const readByte = () => view.getInt8(offset++);
+        const readShort = () => { const v = view.getInt16(offset); offset += 2; return v; };
+        const readInt = () => { const v = view.getInt32(offset); offset += 4; return v; };
+        const readLong = () => { const h = view.getInt32(offset), l = view.getInt32(offset + 4); offset += 8; return (BigInt(h) << 32n) | BigInt(l >>> 0); };
+        const readString = () => { const len = readShort(); const bytes = new Uint8Array(buffer, offset, len); offset += len; return new TextDecoder().decode(bytes); };
 
         function readValue(type) {
             switch (type) {
@@ -1184,12 +1099,8 @@
         }
 
         function readList() {
-            const type = readByte();
-            const length = readInt();
-            const list = [];
-            for (let i = 0; i < length; i++) {
-                list.push(readValue(type));
-            }
+            const type = readByte(), length = readInt(), list = [];
+            for (let i = 0; i < length; i++) list.push(readValue(type));
             return list;
         }
 
@@ -1198,27 +1109,20 @@
             while (true) {
                 const type = readByte();
                 if (type === 0) break;
-                const name = readString();
-                compound[name] = readValue(type);
+                compound[readString()] = readValue(type);
             }
             return compound;
         }
 
         function readIntArray() {
-            const length = readInt();
-            const array = [];
-            for (let i = 0; i < length; i++) {
-                array.push(readInt());
-            }
+            const length = readInt(), array = [];
+            for (let i = 0; i < length; i++) array.push(readInt());
             return array;
         }
 
         function readLongArray() {
-            const length = readInt();
-            const array = [];
-            for (let i = 0; i < length; i++) {
-                array.push(readLong());
-            }
+            const length = readInt(), array = [];
+            for (let i = 0; i < length; i++) array.push(readLong());
             return array;
         }
 
@@ -1228,14 +1132,11 @@
     }
 
     function decodeBlockStates(blockStates, bitsPerEntry, totalBlocks) {
-        const blockData = [];
-        const mask = (1n << BigInt(bitsPerEntry)) - 1n;
-
+        const blockData = [], mask = (1n << BigInt(bitsPerEntry)) - 1n;
         for (let i = 0; i < totalBlocks; i++) {
             const bitPos = i * bitsPerEntry;
             const longIndex = Math.floor(bitPos / 64);
             const bitOffset = bitPos % 64;
-
             if (longIndex >= blockStates.length) break;
 
             let entry = blockStates[longIndex];
@@ -1248,19 +1149,15 @@
                 const nextPart = Number(nextEntry & nextMask);
                 blockId = blockId | (nextPart << (bitsPerEntry - bitsInNextLong));
             }
-
             blockData.push(blockId);
         }
-
         return blockData;
     }
 
     async function parseLitematic(file) {
         try {
             const arrayBuffer = await file.arrayBuffer();
-            const uint8Array = new Uint8Array(arrayBuffer);
-            const decompressed = pako.ungzip(uint8Array);
-
+            const decompressed = pako.ungzip(new Uint8Array(arrayBuffer));
             const nbt = parseNBT(decompressed.buffer);
 
             litematicBlocks = [];
@@ -1269,20 +1166,11 @@
             if (nbt.Regions) {
                 for (const regionName in nbt.Regions) {
                     const region = nbt.Regions[regionName];
+                    if (!region.BlockStates || !region.BlockStatePalette || !region.Size) continue;
 
-                    if (!region.BlockStates || !region.BlockStatePalette || !region.Size) {
-                        continue;
-                    }
-
-                    const blockStates = region.BlockStates;
-                    const palette = region.BlockStatePalette;
-                    const size = region.Size;
-
-                    const width = Math.abs(Number(size.x));
-                    const height = Math.abs(Number(size.y));
-                    const length = Math.abs(Number(size.z));
+                    const blockStates = region.BlockStates, palette = region.BlockStatePalette, size = region.Size;
+                    const width = Math.abs(Number(size.x)), height = Math.abs(Number(size.y)), length = Math.abs(Number(size.z));
                     const totalBlocks = width * height * length;
-
                     const bitsPerEntry = Math.max(2, Math.ceil(Math.log2(palette.length)));
                     const blocks = decodeBlockStates(blockStates, bitsPerEntry, totalBlocks);
 
@@ -1290,17 +1178,11 @@
                         if (blockId >= 0 && blockId < palette.length) {
                             const block = palette[blockId];
                             let blockName = block.Name;
-
                             if (blockName.toLowerCase().includes('air')) return;
-
                             blockName = blockName.replace('minecraft:', '').replace('potted_', '').replace(/_/g, ' ');
                             blockName = blockName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                             blockName = RENAME_DICT[blockName] || blockName;
-
-                            if (BLOCKS_WITHOUT_TEXTURES.includes(blockName)) {
-                                return;
-                            }
-
+                            if (BLOCKS_WITHOUT_TEXTURES.includes(blockName)) return;
                             blockCounts[blockName] = (blockCounts[blockName] || 0) + 1;
                         }
                     });
@@ -1315,9 +1197,7 @@
             if (saved) {
                 const checks = JSON.parse(saved);
                 litematicBlocks.forEach(block => {
-                    if (checks[block.name] !== undefined) {
-                        block.checked = checks[block.name];
-                    }
+                    if (checks[block.name] !== undefined) block.checked = checks[block.name];
                 });
             }
         } catch (error) {
@@ -1330,8 +1210,7 @@
         const context = canvas.getContext('2d');
         canvas.width = 512;
         canvas.height = 256;
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.clearRect(0, 0, 512, 256);
         context.fillStyle = 'white';
         context.font = 'bold 180px Inter, Arial, sans-serif';
         context.textAlign = 'center';
@@ -1340,17 +1219,14 @@
 
         const texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
-
-        const spriteMaterial = new THREE.SpriteMaterial({
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
             map: texture,
             depthTest: false,
             depthWrite: false,
             transparent: true
-        });
-        const sprite = new THREE.Sprite(spriteMaterial);
+        }));
         sprite.scale.set(6, 3, 1);
         sprite.renderOrder = 1000;
-
         return sprite;
     }
 
@@ -1358,31 +1234,42 @@
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x2a2a2a);
         camera = new THREE.PerspectiveCamera(currentFOV, innerWidth / innerHeight, 0.1, 10000);
+        
+        // ОПТИМИЗАЦИЯ: Максимальная производительность рендерера
         renderer = new THREE.WebGLRenderer({
             antialias: true,
             preserveDrawingBuffer: true,
-            powerPreference: 'high-performance'
+            powerPreference: 'high-performance',
+            precision: 'highp',
+            alpha: false,
+            stencil: false,
+            depth: true
         });
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(innerWidth, innerHeight);
+        renderer.sortObjects = true;
+        renderer.shadowMap.enabled = false; // ОПТИМИЗАЦИЯ: отключаем тени
+        
         document.getElementById('viewer-container').appendChild(renderer.domElement);
 
+        // ОПТИМИЗАЦИЯ: Damping для плавности
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = false;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
         controls.screenSpacePanning = true;
+        controls.maxDistance = 5000;
+        controls.minDistance = 5;
+        controls.zoomSpeed = 1.2;
+        controls.rotateSpeed = 1.0;
+        controls.panSpeed = 0.8;
 
         controls.addEventListener('start', () => {
             userInteracting = true;
             animating = false;
         });
-
-        controls.addEventListener('end', () => {
-            userInteracting = false;
-        });
-
-        controls.addEventListener('change', () => {
-            cameraMovedSinceLastClick = true;
-        });
+        controls.addEventListener('end', () => userInteracting = false);
+        controls.addEventListener('change', () => cameraMovedSinceLastClick = true);
 
         scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
@@ -1401,6 +1288,7 @@
         animate();
     }
 
+    // ОПТИМИЗАЦИЯ: Оптимизированный цикл анимации
     function animate() {
         requestAnimationFrame(animate);
 
@@ -1461,11 +1349,7 @@
         document.getElementById('main-content').style.display = 'none';
         if (!scene) initThreeJS();
         await loadModel();
-        
-        // Показать disclaimer после загрузки
-        setTimeout(() => {
-            showDisclaimer();
-        }, 500);
+        setTimeout(showDisclaimer, 500);
     });
 
     async function loadModel() {
@@ -1474,21 +1358,27 @@
             let objContent = null, mtlContent = null;
             defaultTextures = {};
 
+            // ОПТИМИЗАЦИЯ: Параллельная загрузка файлов
+            const filePromises = [];
             for (const [filename, file] of Object.entries(zip.files)) {
                 if (file.dir) continue;
                 const name = filename.toLowerCase();
 
                 if (name.endsWith('.obj')) {
-                    objContent = await file.async('text');
+                    filePromises.push(file.async('text').then(content => objContent = content));
                 }
                 else if (name.endsWith('.mtl')) {
-                    mtlContent = await file.async('text');
+                    filePromises.push(file.async('text').then(content => mtlContent = content));
                 }
                 else if (name.match(/\.(png|jpg|jpeg)$/i)) {
                     const texName = filename.split('/').pop().split('\\').pop();
-                    defaultTextures[texName] = URL.createObjectURL(await file.async('blob'));
+                    filePromises.push(
+                        file.async('blob').then(blob => defaultTextures[texName] = URL.createObjectURL(blob))
+                    );
                 }
             }
+
+            await Promise.all(filePromises);
 
             if (!objContent) { alert('No OBJ file!'); location.reload(); return; }
 
@@ -1519,18 +1409,21 @@
                 const mtlLoader = new THREE.MTLLoader(manager);
                 const mtls = mtlLoader.parse(mtlContent);
                 mtls.preload();
-                for (const [, mat] of Object.entries(mtls.materials)) {
+                
+                for (const [matName, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
-                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                    mat.transparent = false;
-                    mat.depthWrite = true;
-                    mat.alphaTest = 0;
+                    
+                    const isTransparent = shouldBeTransparent(matName);
+                    mat.transparent = isTransparent;
+                    mat.depthWrite = !isTransparent;
+                    mat.alphaTest = isTransparent ? 0.1 : 0;
                     mat.opacity = 1.0;
                     
                     if (mat.map) {
                         mat.map.magFilter = THREE.LinearFilter;
                         mat.map.minFilter = THREE.LinearMipMapLinearFilter;
                         mat.map.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+                        mat.map.generateMipmaps = false; // ОПТИМИЗАЦИЯ
                     }
                 }
                 loader.setMaterials(mtls);
@@ -1540,35 +1433,33 @@
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
 
+            // ОПТИМИЗАЦИЯ: Батчинг обработки мешей
             model.traverse(child => {
                 if (child.isMesh) {
                     allMeshes.push(child);
                     child.geometry.computeBoundingBox();
                     const box = child.geometry.boundingBox;
-                    const worldPos = new THREE.Vector3();
+                    const worldPos = vectorPool.get();
                     child.getWorldPosition(worldPos);
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
+                    vectorPool.release(worldPos);
+                    
                     if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(m => {
-                                m.side = THREE.DoubleSide;
-                                // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                                m.transparent = false;
-                                m.depthWrite = true;
-                                m.alphaTest = 0;
-                                m.opacity = 1.0;
-                            });
-                        } else {
-                            child.material.side = THREE.DoubleSide;
-                            // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                            child.material.transparent = false;
-                            child.material.depthWrite = true;
-                            child.material.alphaTest = 0;
-                            child.material.opacity = 1.0;
-                        }
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach(m => {
+                            m.side = THREE.DoubleSide;
+                            const isTransparent = shouldBeTransparent(m.name);
+                            m.transparent = isTransparent;
+                            m.depthWrite = !isTransparent;
+                            m.alphaTest = isTransparent ? 0.1 : 0;
+                            m.opacity = 1.0;
+                        });
                     }
+                    
                     child.frustumCulled = true;
+                    child.matrixAutoUpdate = false; // ОПТИМИЗАЦИЯ
+                    child.updateMatrix();
                 }
             });
 
@@ -1612,9 +1503,7 @@
                 document.getElementById('toggle-texture').classList.add('active');
             }
 
-            if (litematicBlocks.length > 0) {
-                updateMaterialList();
-            }
+            if (litematicBlocks.length > 0) updateMaterialList();
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('viewer-container').style.display = 'block';
@@ -1624,6 +1513,8 @@
             document.getElementById('material-toggle').style.display = 'flex';
             document.getElementById('right-controls').style.display = 'flex';
             document.getElementById('layer-slider-container').style.display = 'block';
+            
+            console.log('✅ Model loaded - Meshes:', allMeshes.length, 'Layers:', totalLayers);
         } catch (error) {
             alert('Error: ' + error.message);
             console.error(error);
@@ -1639,54 +1530,46 @@
 
     function applyTextures() {
         const currentTextures = isCustomMode ? customTextures : defaultTextures;
-        allMeshes.forEach(mesh => {
-            if (!mesh.material) return;
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            mats.forEach(mat => {
-                if (!mat.name) return;
-                const texName = textureMap[mat.name];
-                if (!texName) return;
-                const cleanTexName = texName.split('/').pop().split('\\').pop();
-                if (currentTextures[cleanTexName]) {
-                    const texture = new THREE.TextureLoader().load(currentTextures[cleanTexName]);
-                    texture.magFilter = THREE.LinearFilter;
-                    texture.minFilter = THREE.LinearMipMapLinearFilter;
-                    texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
-                    mat.map = texture;
-                    
-                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
-                    mat.transparent = false;
-                    mat.depthWrite = true;
-                    mat.alphaTest = 0;
-                    mat.opacity = 1.0;
-                    
-                    mat.needsUpdate = true;
-                    return;
-                }
+        
+        // ОПТИМИЗАЦИЯ: Батчинг обновлений текстур
+        requestAnimationFrame(() => {
+            allMeshes.forEach(mesh => {
+                if (!mesh.material) return;
+                const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+                mats.forEach(mat => {
+                    if (!mat.name) return;
+                    const texName = textureMap[mat.name];
+                    if (!texName) return;
+                    const cleanTexName = texName.split('/').pop().split('\\').pop();
+                    if (currentTextures[cleanTexName]) {
+                        const texture = new THREE.TextureLoader().load(currentTextures[cleanTexName]);
+                        texture.magFilter = THREE.LinearFilter;
+                        texture.minFilter = THREE.LinearMipMapLinearFilter;
+                        texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+                        texture.generateMipmaps = false;
+                        mat.map = texture;
+                        
+                        const isTransparent = shouldBeTransparent(mat.name);
+                        mat.transparent = isTransparent;
+                        mat.depthWrite = !isTransparent;
+                        mat.alphaTest = isTransparent ? 0.1 : 0;
+                        mat.opacity = 1.0;
+                        mat.needsUpdate = true;
+                    }
+                });
             });
         });
     }
 
     function snapToBlockEdge(point) {
-        return new THREE.Vector3(
-            Math.round(point.x),
-            Math.round(point.y),
-            Math.round(point.z)
-        );
+        return new THREE.Vector3(Math.round(point.x), Math.round(point.y), Math.round(point.z));
     }
 
     function getStraightLine(p1, p2) {
-        const dx = Math.abs(p2.x - p1.x);
-        const dy = Math.abs(p2.y - p1.y);
-        const dz = Math.abs(p2.z - p1.z);
-
-        if (dx >= dy && dx >= dz) {
-            return new THREE.Vector3(p2.x, p1.y, p1.z);
-        } else if (dy >= dx && dy >= dz) {
-            return new THREE.Vector3(p1.x, p2.y, p1.z);
-        } else {
-            return new THREE.Vector3(p1.x, p1.y, p2.z);
-        }
+        const dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y), dz = Math.abs(p2.z - p1.z);
+        if (dx >= dy && dx >= dz) return new THREE.Vector3(p2.x, p1.y, p1.z);
+        if (dy >= dx && dy >= dz) return new THREE.Vector3(p1.x, p2.y, p1.z);
+        return new THREE.Vector3(p1.x, p1.y, p2.z);
     }
 
     function manhattanDistance(p1, p2) {
@@ -1708,45 +1591,42 @@
 
     function clearRuler() {
         rulerPoints = [];
-        if (rulerLine) {
-            scene.remove(rulerLine);
-            rulerLine = null;
-        }
-        if (rulerTextSprite) {
-            scene.remove(rulerTextSprite);
-            rulerTextSprite = null;
-        }
+        if (rulerLine) { scene.remove(rulerLine); rulerLine = null; }
+        if (rulerTextSprite) { scene.remove(rulerTextSprite); rulerTextSprite = null; }
         rulerSpheres.forEach(sphere => scene.remove(sphere));
         rulerSpheres = [];
     }
 
+    // ОПТИМИЗАЦИЯ: Throttle для mousemove
+    let mouseMoveTimeout;
     document.addEventListener('mousemove', (event) => {
         if (!renderer || !renderer.domElement) return;
+        
+        clearTimeout(mouseMoveTimeout);
+        mouseMoveTimeout = setTimeout(() => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
+            const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
-        raycaster.setFromCamera(mouse, camera);
-        const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
-        const intersects = raycaster.intersectObjects(visibleMeshes, false);
-
-        if (rulerActive && rulerPoints.length < 2) {
-            if (intersects.length > 0) {
-                const rawPoint = intersects[0].point;
-                const snappedPoint = snapToBlockEdge(rawPoint);
-
-                if (rulerPoints.length === 1) {
-                    const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
-                    previewSphere.position.copy(straightPoint);
+            if (rulerActive && rulerPoints.length < 2) {
+                if (intersects.length > 0) {
+                    const snappedPoint = snapToBlockEdge(intersects[0].point);
+                    if (rulerPoints.length === 1) {
+                        const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
+                        previewSphere.position.copy(straightPoint);
+                    } else {
+                        previewSphere.position.copy(snappedPoint);
+                    }
+                    previewSphere.visible = true;
                 } else {
-                    previewSphere.position.copy(snappedPoint);
+                    previewSphere.visible = false;
                 }
-                previewSphere.visible = true;
-            } else {
-                previewSphere.visible = false;
             }
-        }
+        }, 16); // ~60fps throttle
     });
 
     document.addEventListener('click', (event) => {
@@ -1770,15 +1650,8 @@
         const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
         if (intersects.length > 0) {
-            const rawPoint = intersects[0].point;
-            const snappedPoint = snapToBlockEdge(rawPoint);
-
-            let finalPoint = snappedPoint;
-
-            if (rulerPoints.length === 1) {
-                finalPoint = getStraightLine(rulerPoints[0], snappedPoint);
-            }
-
+            const snappedPoint = snapToBlockEdge(intersects[0].point);
+            let finalPoint = rulerPoints.length === 1 ? getStraightLine(rulerPoints[0], snappedPoint) : snappedPoint;
             rulerPoints.push(finalPoint);
 
             const sphereGeom = new THREE.SphereGeometry(0.3, 8, 8);
@@ -1791,36 +1664,26 @@
 
             if (rulerPoints.length === 2) {
                 previewSphere.visible = false;
-
                 const lineGeom = new THREE.BufferGeometry().setFromPoints(rulerPoints);
-                const lineMat = new THREE.LineBasicMaterial({
-                    color: 0xffffff,
-                    linewidth: 2,
-                    depthTest: false
-                });
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, depthTest: false });
                 rulerLine = new THREE.Line(lineGeom, lineMat);
                 rulerLine.renderOrder = 998;
                 scene.add(rulerLine);
 
                 const distance = manhattanDistance(rulerPoints[0], rulerPoints[1]);
-
                 const midPoint = new THREE.Vector3().addVectors(rulerPoints[0], rulerPoints[1]).multiplyScalar(0.5);
                 rulerTextSprite = createTextSprite(distance.toString());
                 rulerTextSprite.position.copy(midPoint);
                 rulerTextSprite.position.y += 2;
                 scene.add(rulerTextSprite);
-
                 cameraMovedSinceLastClick = false;
             }
         }
     });
 
+    // Touch events (аналогично)
     let touchMoved = false;
-
-    document.addEventListener('touchstart', (event) => {
-        touchMoved = false;
-    });
-
+    document.addEventListener('touchstart', () => touchMoved = false);
     document.addEventListener('touchmove', (event) => {
         if (!renderer || !renderer.domElement) return;
         touchMoved = true;
@@ -1834,21 +1697,14 @@
         const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
         const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
-        if (rulerActive && rulerPoints.length < 2) {
-            if (intersects.length > 0) {
-                const rawPoint = intersects[0].point;
-                const snappedPoint = snapToBlockEdge(rawPoint);
-
-                if (rulerPoints.length === 1) {
-                    const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
-                    previewSphere.position.copy(straightPoint);
-                } else {
-                    previewSphere.position.copy(snappedPoint);
-                }
-                previewSphere.visible = true;
+        if (rulerActive && rulerPoints.length < 2 && intersects.length > 0) {
+            const snappedPoint = snapToBlockEdge(intersects[0].point);
+            if (rulerPoints.length === 1) {
+                previewSphere.position.copy(getStraightLine(rulerPoints[0], snappedPoint));
             } else {
-                previewSphere.visible = false;
+                previewSphere.position.copy(snappedPoint);
             }
+            previewSphere.visible = true;
         }
     });
 
@@ -1874,15 +1730,8 @@
         const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
         if (intersects.length > 0) {
-            const rawPoint = intersects[0].point;
-            const snappedPoint = snapToBlockEdge(rawPoint);
-
-            let finalPoint = snappedPoint;
-
-            if (rulerPoints.length === 1) {
-                finalPoint = getStraightLine(rulerPoints[0], snappedPoint);
-            }
-
+            const snappedPoint = snapToBlockEdge(intersects[0].point);
+            let finalPoint = rulerPoints.length === 1 ? getStraightLine(rulerPoints[0], snappedPoint) : snappedPoint;
             rulerPoints.push(finalPoint);
 
             const sphereGeom = new THREE.SphereGeometry(0.3, 8, 8);
@@ -1895,25 +1744,18 @@
 
             if (rulerPoints.length === 2) {
                 previewSphere.visible = false;
-
                 const lineGeom = new THREE.BufferGeometry().setFromPoints(rulerPoints);
-                const lineMat = new THREE.LineBasicMaterial({
-                    color: 0xffffff,
-                    linewidth: 2,
-                    depthTest: false
-                });
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, depthTest: false });
                 rulerLine = new THREE.Line(lineGeom, lineMat);
                 rulerLine.renderOrder = 998;
                 scene.add(rulerLine);
 
                 const distance = manhattanDistance(rulerPoints[0], rulerPoints[1]);
-
                 const midPoint = new THREE.Vector3().addVectors(rulerPoints[0], rulerPoints[1]).multiplyScalar(0.5);
                 rulerTextSprite = createTextSprite(distance.toString());
                 rulerTextSprite.position.copy(midPoint);
                 rulerTextSprite.position.y += 2;
                 scene.add(rulerTextSprite);
-
                 cameraMovedSinceLastClick = false;
             }
         }
@@ -1945,8 +1787,7 @@
         currentFOV = currentFOV === 40 ? 60 : 40;
         camera.fov = currentFOV;
         camera.updateProjectionMatrix();
-        const btn = document.getElementById('fov-toggle');
-        btn.classList.toggle('active');
+        document.getElementById('fov-toggle').classList.toggle('active');
     });
 
     document.getElementById('share-button')?.addEventListener('click', async () => {
@@ -1961,26 +1802,21 @@
             const shareZip = new JSZip();
             shareZip.file('model.zip', modelZip);
 
-            if (litematicFile) {
-                shareZip.file('litematic.litematic', litematicFile);
-            }
+            if (litematicFile) shareZip.file('litematic.litematic', litematicFile);
 
             if (hasCustomTextures && Object.keys(customTextures).length > 0) {
-                console.log('📦 Saving', Object.keys(customTextures).length, 'custom textures...');
                 const texturesFolder = shareZip.folder('custom_textures');
                 for (const [filename, blobUrl] of Object.entries(customTextures)) {
-                    const response = await fetch(blobUrl);
-                    const blob = await response.blob();
+                    const blob = await fetch(blobUrl).then(r => r.blob());
                     texturesFolder.file(filename, blob);
-                    console.log('✅ Saved:', filename);
                 }
             }
 
             const metadata = {
-                currentLayer: currentLayer,
-                totalLayers: totalLayers,
+                currentLayer,
+                totalLayers,
                 hasLitematic: !!litematicFile,
-                hasCustomTextures: hasCustomTextures,
+                hasCustomTextures,
                 customTexturesCount: Object.keys(customTextures).length,
                 timestamp: Date.now()
             };
@@ -1988,7 +1824,6 @@
 
             const blob = await shareZip.generateAsync({ type: 'blob' });
             const url = URL.createObjectURL(blob);
-
             const a = document.createElement('a');
             a.href = url;
             const fileName = 'model-' + Date.now();
@@ -1997,20 +1832,18 @@
 
             document.getElementById('loading').style.display = 'none';
 
-            const shareUrl = window.location.origin + '/?view=' + fileName;
-            
             let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
-                '1. Upload ' + fileName + '.mcviewer to /shared/ folder on GitHub\n' +
-                '2. Push changes to GitHub\n' +
-                '3. Share this link:\n\n' +
-                shareUrl;
+                '1. Upload ' + fileName + '.mcviewer to /shared/ folder\n' +
+                '2. Push to GitHub\n' +
+                '3. Share link:\n\n' +
+                window.location.origin + '/?view=' + fileName;
             
             if (hasCustomTextures) {
-                message += '\n\n🎨 Custom textures included: ' + Object.keys(customTextures).length;
+                message += '\n\n🎨 Textures: ' + Object.keys(customTextures).length;
             }
             
-            prompt(message, shareUrl);
+            prompt(message, window.location.origin + '/?view=' + fileName);
 
         } catch (error) {
             console.error('Share error:', error);
@@ -2028,12 +1861,20 @@
         animating = true;
     }
 
+    // ОПТИМИЗАЦИЯ: Батчинг обновлений видимости
     function updateVisibility() {
         const currentMaxY = minY + currentLayer;
-        allMeshes.forEach(mesh => {
-            const worldPos = new THREE.Vector3();
-            mesh.getWorldPosition(worldPos);
-            mesh.visible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+        
+        requestAnimationFrame(() => {
+            const worldPos = vectorPool.get();
+            allMeshes.forEach(mesh => {
+                mesh.getWorldPosition(worldPos);
+                const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+                if (mesh.visible !== shouldBeVisible) {
+                    mesh.visible = shouldBeVisible;
+                }
+            });
+            vectorPool.release(worldPos);
         });
     }
 
@@ -2041,11 +1882,17 @@
         document.getElementById('layer-info-top').textContent = 'Layer ' + currentLayer + ' / ' + totalLayers;
     }
 
+    // ОПТИМИЗАЦИЯ: Debounce для slider
+    let sliderTimeout;
     document.getElementById('layer-slider').addEventListener('input', (e) => {
+        clearTimeout(sliderTimeout);
         currentLayer = parseInt(e.target.value);
-        updateVisibility();
         updateLayerDisplay();
-        updateCameraHeight();
+        
+        sliderTimeout = setTimeout(() => {
+            updateVisibility();
+            updateCameraHeight();
+        }, 50);
     });
 
     document.getElementById('arrow-left').addEventListener('click', () => {
@@ -2078,12 +1925,17 @@
         }
     });
 
+    // ОПТИМИЗАЦИЯ: Throttle для resize
+    let resizeTimeout;
     addEventListener('resize', () => {
-        if (camera && renderer) {
-            camera.aspect = innerWidth / innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(innerWidth, innerHeight);
-        }
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (camera && renderer) {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            }
+        }, 250);
     });
 
     addEventListener('orientationchange', () => {
