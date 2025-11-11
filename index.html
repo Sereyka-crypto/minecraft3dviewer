@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Minecraft Layer Viewer⚒️</title>
+    <title>Minecraft Layer Viewer2⚒️</title>
     
     <link rel="icon" type="image/png" href="/skin-avatar.png">
     
@@ -24,11 +24,13 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </noscript>
 
-    <!-- 🚀 ОПТИМИЗАЦИЯ: Скрипты с defer -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
+    <!-- ⚠️ ИСПРАВЛЕНИЕ: Three.js БЕЗ defer (должен загружаться синхронно) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- 🚀 ОПТИМИЗАЦИЯ: Эти библиотеки можно загружать с defer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" defer></script>
 
@@ -298,7 +300,6 @@
             justify-content: center;
         }
         
-        /* 🚀 ОПТИМИЗАЦИЯ: Lazy loading для изображений */
         .material-img {
             width: 40px;
             height: 40px;
@@ -908,7 +909,7 @@
         </div>
         <div class="material-table-header">
             <div>✅</div>
-            <div>🖼</div>
+            <div>🖼️</div>
             <div>Block</div>
             <div>Quantity</div>
             <div>Stacks</div>
