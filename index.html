@@ -876,7 +876,7 @@
         <button class="disclaimer-notification-close" id="disclaimer-close">×</button>
     </div>
     <div class="disclaimer-notification-content">
-        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Heybuilds is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
+        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Sereyka Minecraft Layer Viewer is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
     </div>
 </div>
 
@@ -1521,12 +1521,11 @@
                 mtls.preload();
                 for (const [, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
-                    // ИСПРАВЛЕНИЕ: убираем настройки прозрачности
-                    // Теперь все блоки будут полностью видимыми
-                    mat.transparent = true; // Оставляем true для поддержки текстур с альфа-каналом
-                    mat.depthWrite = true; // ИЗМЕНЕНО: включаем depthWrite
-                    mat.alphaTest = 0.5; // ИЗМЕНЕНО: увеличиваем до 0.5 для лучшей видимости
-                    mat.opacity = 1.0; // Полная непрозрачность
+                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
+                    mat.transparent = false;
+                    mat.depthWrite = true;
+                    mat.alphaTest = 0;
+                    mat.opacity = 1.0;
                     
                     if (mat.map) {
                         mat.map.magFilter = THREE.LinearFilter;
@@ -1554,18 +1553,18 @@
                         if (Array.isArray(child.material)) {
                             child.material.forEach(m => {
                                 m.side = THREE.DoubleSide;
-                                // ИСПРАВЛЕНИЕ для уже загруженных материалов
-                                m.transparent = true;
+                                // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
+                                m.transparent = false;
                                 m.depthWrite = true;
-                                m.alphaTest = 0.5;
+                                m.alphaTest = 0;
                                 m.opacity = 1.0;
                             });
                         } else {
                             child.material.side = THREE.DoubleSide;
-                            // ИСПРАВЛЕНИЕ для уже загруженных материалов
-                            child.material.transparent = true;
+                            // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
+                            child.material.transparent = false;
                             child.material.depthWrite = true;
-                            child.material.alphaTest = 0.5;
+                            child.material.alphaTest = 0;
                             child.material.opacity = 1.0;
                         }
                     }
@@ -1655,10 +1654,10 @@
                     texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
                     mat.map = texture;
                     
-                    // ИСПРАВЛЕНИЕ: применяем настройки видимости при смене текстур
-                    mat.transparent = true;
+                    // ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОЗРАЧНОСТИ
+                    mat.transparent = false;
                     mat.depthWrite = true;
-                    mat.alphaTest = 0.5;
+                    mat.alphaTest = 0;
                     mat.opacity = 1.0;
                     
                     mat.needsUpdate = true;
