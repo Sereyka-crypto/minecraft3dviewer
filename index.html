@@ -749,24 +749,66 @@
 </head>
 <body>
 
+<!-- Вежливое сообщение для случайных посетителей -->
 <div id="welcome-message" style="display: none;">
-    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div style="text-align: center; max-width: 700px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 60px 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <span id="secret-emoji" style="font-size: 80px; margin-bottom: 30px; display: block; animation: wave 2s ease-in-out infinite; cursor: pointer;">👋</span>
-            <h1 style="font-size: 42px; font-weight: 700; margin-bottom: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Hello there!</h1>
-            <p style="font-size: 18px; opacity: 0.95; line-height: 1.8; margin-bottom: 15px;">This is a <span style="font-weight: 600; color: #ffd700;">private workspace</span> for Sereyka's projects.</p>
-            <p style="font-size: 18px; opacity: 0.95; line-height: 1.8; margin-bottom: 15px;">If you received a link to view a specific model, please use that direct link instead.</p>
-            <p style="margin-top: 30px; font-size: 16px; opacity: 0.8;">Have a great day! 😊</p>
+    <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    ">
+        <div style="
+            text-align: center;
+            max-width: 700px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 60px 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        ">
+            <span id="secret-emoji" style="
+                font-size: 80px;
+                margin-bottom: 30px;
+                display: block;
+                animation: wave 2s ease-in-out infinite;
+                cursor: pointer;
+            ">👋</span>
+            <h1 style="
+                font-size: 42px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            ">Hello there!</h1>
+            <p style="
+                font-size: 18px;
+                opacity: 0.95;
+                line-height: 1.8;
+                margin-bottom: 15px;
+            ">This is a <span style="font-weight: 600; color: #ffd700;">private workspace</span> for Sereyka's projects.</p>
+            <p style="
+                font-size: 18px;
+                opacity: 0.95;
+                line-height: 1.8;
+                margin-bottom: 15px;
+            ">If you received a link to view a specific model, please use that direct link instead.</p>
+            <p style="
+                margin-top: 30px;
+                font-size: 16px;
+                opacity: 0.8;
+            ">Have a great day! 😊</p>
         </div>
     </div>
 </div>
 
+<!-- Форма загрузки (скрыта по умолчанию) -->
 <div id="main-content" style="display: none;">
     <div class="upload-container">
         <h1>Viewer</h1>
         <p class="subtitle">Load files</p>
 
-        <div class="upload-section">
+        <div class="upload-section" id="upload-section">
             <div class="upload-box">
                 <h3>File 1</h3>
                 <input type="file" id="model-input" accept=".zip">
@@ -798,6 +840,7 @@
             </div>
         </div>
 
+        <!-- Camera Settings -->
         <div class="camera-settings">
             <h3>Camera Settings</h3>
             <div class="camera-controls">
@@ -825,6 +868,7 @@
     </div>
 </div>
 
+<!-- Disclaimer Notification (внизу слева) -->
 <div class="disclaimer-notification" id="disclaimer-notification">
     <div class="disclaimer-notification-header">
         <span class="disclaimer-notification-icon">⚠️</span>
@@ -832,7 +876,7 @@
         <button class="disclaimer-notification-close" id="disclaimer-close">×</button>
     </div>
     <div class="disclaimer-notification-content">
-        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Sereyka Layer Viewer is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
+        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Heybuilds is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
     </div>
 </div>
 
@@ -878,21 +922,33 @@
 </div>
 
 <script>
-    'use strict';
-    
-    // Глобальные переменные
     let scene, camera, renderer, controls;
     let model, allMeshes = [], currentLayer = 1, previousLayer = 1, minY = 0, maxY = 0, totalLayers = 0;
     let modelZip = null, litematicFile = null, defaultTextures = {}, customTextures = {}, textureMap = {}, isCustomMode = false, hasCustomTextures = false;
     let initialCameraX, initialCameraY, initialCameraZ, modelCenter, layerHeight;
     let targetCameraY = 0, targetTargetY = 0, animating = false, userInteracting = false;
     let currentFOV = 40;
+    let materials = [];
     let litematicBlocks = [];
 
-    let rulerActive = false, rulerPoints = [], rulerLine = null, rulerSpheres = [], previewSphere = null, rulerTextSprite = null;
-    let raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(), cameraMovedSinceLastClick = false;
+    let rulerActive = false;
+    let rulerPoints = [];
+    let rulerLine = null;
+    let rulerSpheres = [];
+    let previewSphere = null;
+    let rulerTextSprite = null;
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    let cameraMovedSinceLastClick = false;
 
-    let cameraRotation = 90, cameraTilt = 60;
+    // Camera settings
+    let cameraRotation = 90;
+    let cameraTilt = 60;
+
+    // Блоки, которые должны остаться прозрачными
+    const TRANSPARENT_MATERIALS = [
+        'glass', 'pane', 'potted', 'stained_glass'
+    ];
 
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
@@ -902,17 +958,20 @@
         "Water Cauldron": "Cauldron"
     };
 
-    const BLOCKS_WITHOUT_TEXTURES = ["Nether Portal", "End Portal", "End Gateway"];
+    const BLOCKS_WITHOUT_TEXTURES = [
+        "Nether Portal",
+        "End Portal",
+        "End Gateway"
+    ];
 
-    // Прозрачность только для стекла и цветов в горшках
-    const TRANSPARENT_MATERIALS = ['glass', 'pane', 'potted', 'stained_glass'];
-    
+    // Функция проверки, должен ли материал быть прозрачным
     function shouldBeTransparent(materialName) {
         if (!materialName) return false;
         const nameLower = materialName.toLowerCase();
         return TRANSPARENT_MATERIALS.some(keyword => nameLower.includes(keyword));
     }
 
+    // Update camera slider values
     document.getElementById('rotation-slider').addEventListener('input', (e) => {
         cameraRotation = parseInt(e.target.value);
         document.getElementById('rotation-value').textContent = cameraRotation + '°';
@@ -923,28 +982,38 @@
         document.getElementById('tilt-value').textContent = cameraTilt + '°';
     });
 
+    // Функция показа disclaimer
     function showDisclaimer() {
         document.getElementById('disclaimer-notification').classList.add('active');
     }
 
+    // Закрытие disclaimer
     document.getElementById('disclaimer-close').addEventListener('click', () => {
         document.getElementById('disclaimer-notification').classList.remove('active');
     });
 
-    let clickCount = 0, clickTimer = null;
+    // Секретная кнопка - тройной клик по emoji
+    let clickCount = 0;
+    let clickTimer = null;
 
+    // Проверка URL параметров
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
         const adminMode = urlParams.has('admin');
         
+        // Секретная кнопка
         const emoji = document.getElementById('secret-emoji');
         if (emoji) {
             emoji.addEventListener('click', () => {
                 clickCount++;
+                
                 if (clickCount === 1) {
-                    clickTimer = setTimeout(() => clickCount = 0, 1000);
+                    clickTimer = setTimeout(() => {
+                        clickCount = 0;
+                    }, 1000);
                 }
+                
                 if (clickCount === 3) {
                     clearTimeout(clickTimer);
                     clickCount = 0;
@@ -955,7 +1024,8 @@
         }
         
         if (viewFile) {
-            console.log('🔗 View mode:', viewFile);
+            console.log('🔗 View mode detected:', viewFile);
+            
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
@@ -966,8 +1036,13 @@
                     return response.blob();
                 })
                 .then(async blob => {
-                    await loadSharedModel(new File([blob], viewFile + '.mcviewer'));
-                    setTimeout(showDisclaimer, 500);
+                    const file = new File([blob], viewFile + '.mcviewer');
+                    await loadSharedModel(file);
+                    
+                    setTimeout(() => {
+                        showDisclaimer();
+                    }, 500);
+                    
                     setTimeout(() => {
                         const shareBtn = document.getElementById('share-button');
                         if (shareBtn) shareBtn.style.display = 'none';
@@ -975,7 +1050,7 @@
                 })
                 .catch(error => {
                     console.error('❌ Load error:', error);
-                    alert('❌ Model not found');
+                    alert('❌ Model not found. Please check the link.');
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 });
@@ -992,14 +1067,17 @@
 
     async function loadSharedModel(file) {
         document.getElementById('loading').style.display = 'block';
+
         try {
             const zip = await JSZip.loadAsync(file);
+
             const modelFile = await zip.file('model.zip').async('blob');
             modelZip = new File([modelFile], 'model.zip');
 
             const litematicZipFile = zip.file('litematic.litematic');
             if (litematicZipFile) {
-                litematicFile = new File([await litematicZipFile.async('blob')], 'litematic.litematic');
+                const litematicBlob = await litematicZipFile.async('blob');
+                litematicFile = new File([litematicBlob], 'litematic.litematic');
                 await parseLitematic(litematicFile);
             }
 
@@ -1011,15 +1089,18 @@
                     if (!file.dir) files.push(file);
                 });
                 
-                console.log('📦 Loading', files.length, 'textures');
+                console.log('📦 Loading', files.length, 'custom textures...');
+                
                 for (const file of files) {
+                    const blob = await file.async('blob');
                     const fileName = file.name.split('/').pop();
-                    customTextures[fileName] = URL.createObjectURL(await file.async('blob'));
+                    customTextures[fileName] = URL.createObjectURL(blob);
+                    console.log('✅ Loaded texture:', fileName);
                 }
                 
                 if (Object.keys(customTextures).length > 0) {
                     hasCustomTextures = true;
-                    console.log('🎨 Textures loaded:', Object.keys(customTextures).length);
+                    console.log('🎨 Custom textures loaded:', Object.keys(customTextures).length);
                 }
             }
 
@@ -1034,31 +1115,65 @@
                     toggleBtn.disabled = false;
                     toggleBtn.classList.add('active');
                 }
+                console.log('🎨 Custom textures applied automatically');
             }
+
         } catch (error) {
-            console.error('Error loading model:', error);
-            alert('Error loading model');
+            console.error('Error loading shared model:', error);
+            alert('Error loading shared model. Please make sure the file is valid.');
             document.getElementById('loading').style.display = 'none';
         }
     }
 
     function formatStacks(count) {
-        if (count < 64) return count.toString();
-        if (count === 64) return '1 x 64';
-        const stacks = Math.floor(count / 64);
-        const remainder = count % 64;
-        return remainder === 0 ? stacks + ' x 64' : stacks + ' x 64 + ' + remainder;
+        if (count < 64) {
+            return count.toString();
+        } else if (count === 64) {
+            return '1 x 64';
+        } else {
+            const stacks = Math.floor(count / 64);
+            const remainder = count % 64;
+            if (remainder === 0) {
+                return stacks + ' x 64';
+            } else {
+                return stacks + ' x 64 + ' + remainder;
+            }
+        }
     }
 
     function parseNBT(buffer) {
         const view = new DataView(buffer);
         let offset = 0;
 
-        const readByte = () => view.getInt8(offset++);
-        const readShort = () => { const v = view.getInt16(offset); offset += 2; return v; };
-        const readInt = () => { const v = view.getInt32(offset); offset += 4; return v; };
-        const readLong = () => { const h = view.getInt32(offset), l = view.getInt32(offset + 4); offset += 8; return (BigInt(h) << 32n) | BigInt(l >>> 0); };
-        const readString = () => { const len = readShort(); const bytes = new Uint8Array(buffer, offset, len); offset += len; return new TextDecoder().decode(bytes); };
+        function readByte() {
+            return view.getInt8(offset++);
+        }
+
+        function readShort() {
+            const val = view.getInt16(offset);
+            offset += 2;
+            return val;
+        }
+
+        function readInt() {
+            const val = view.getInt32(offset);
+            offset += 4;
+            return val;
+        }
+
+        function readLong() {
+            const high = view.getInt32(offset);
+            const low = view.getInt32(offset + 4);
+            offset += 8;
+            return (BigInt(high) << 32n) | BigInt(low >>> 0);
+        }
+
+        function readString() {
+            const length = readShort();
+            const bytes = new Uint8Array(buffer, offset, length);
+            offset += length;
+            return new TextDecoder().decode(bytes);
+        }
 
         function readValue(type) {
             switch (type) {
@@ -1076,8 +1191,12 @@
         }
 
         function readList() {
-            const type = readByte(), length = readInt(), list = [];
-            for (let i = 0; i < length; i++) list.push(readValue(type));
+            const type = readByte();
+            const length = readInt();
+            const list = [];
+            for (let i = 0; i < length; i++) {
+                list.push(readValue(type));
+            }
             return list;
         }
 
@@ -1086,20 +1205,27 @@
             while (true) {
                 const type = readByte();
                 if (type === 0) break;
-                compound[readString()] = readValue(type);
+                const name = readString();
+                compound[name] = readValue(type);
             }
             return compound;
         }
 
         function readIntArray() {
-            const length = readInt(), array = [];
-            for (let i = 0; i < length; i++) array.push(readInt());
+            const length = readInt();
+            const array = [];
+            for (let i = 0; i < length; i++) {
+                array.push(readInt());
+            }
             return array;
         }
 
         function readLongArray() {
-            const length = readInt(), array = [];
-            for (let i = 0; i < length; i++) array.push(readLong());
+            const length = readInt();
+            const array = [];
+            for (let i = 0; i < length; i++) {
+                array.push(readLong());
+            }
             return array;
         }
 
@@ -1109,11 +1235,14 @@
     }
 
     function decodeBlockStates(blockStates, bitsPerEntry, totalBlocks) {
-        const blockData = [], mask = (1n << BigInt(bitsPerEntry)) - 1n;
+        const blockData = [];
+        const mask = (1n << BigInt(bitsPerEntry)) - 1n;
+
         for (let i = 0; i < totalBlocks; i++) {
             const bitPos = i * bitsPerEntry;
             const longIndex = Math.floor(bitPos / 64);
             const bitOffset = bitPos % 64;
+
             if (longIndex >= blockStates.length) break;
 
             let entry = blockStates[longIndex];
@@ -1126,15 +1255,19 @@
                 const nextPart = Number(nextEntry & nextMask);
                 blockId = blockId | (nextPart << (bitsPerEntry - bitsInNextLong));
             }
+
             blockData.push(blockId);
         }
+
         return blockData;
     }
 
     async function parseLitematic(file) {
         try {
             const arrayBuffer = await file.arrayBuffer();
-            const decompressed = pako.ungzip(new Uint8Array(arrayBuffer));
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const decompressed = pako.ungzip(uint8Array);
+
             const nbt = parseNBT(decompressed.buffer);
 
             litematicBlocks = [];
@@ -1143,11 +1276,20 @@
             if (nbt.Regions) {
                 for (const regionName in nbt.Regions) {
                     const region = nbt.Regions[regionName];
-                    if (!region.BlockStates || !region.BlockStatePalette || !region.Size) continue;
 
-                    const blockStates = region.BlockStates, palette = region.BlockStatePalette, size = region.Size;
-                    const width = Math.abs(Number(size.x)), height = Math.abs(Number(size.y)), length = Math.abs(Number(size.z));
+                    if (!region.BlockStates || !region.BlockStatePalette || !region.Size) {
+                        continue;
+                    }
+
+                    const blockStates = region.BlockStates;
+                    const palette = region.BlockStatePalette;
+                    const size = region.Size;
+
+                    const width = Math.abs(Number(size.x));
+                    const height = Math.abs(Number(size.y));
+                    const length = Math.abs(Number(size.z));
                     const totalBlocks = width * height * length;
+
                     const bitsPerEntry = Math.max(2, Math.ceil(Math.log2(palette.length)));
                     const blocks = decodeBlockStates(blockStates, bitsPerEntry, totalBlocks);
 
@@ -1155,11 +1297,17 @@
                         if (blockId >= 0 && blockId < palette.length) {
                             const block = palette[blockId];
                             let blockName = block.Name;
+
                             if (blockName.toLowerCase().includes('air')) return;
+
                             blockName = blockName.replace('minecraft:', '').replace('potted_', '').replace(/_/g, ' ');
                             blockName = blockName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                             blockName = RENAME_DICT[blockName] || blockName;
-                            if (BLOCKS_WITHOUT_TEXTURES.includes(blockName)) return;
+
+                            if (BLOCKS_WITHOUT_TEXTURES.includes(blockName)) {
+                                return;
+                            }
+
                             blockCounts[blockName] = (blockCounts[blockName] || 0) + 1;
                         }
                     });
@@ -1174,7 +1322,9 @@
             if (saved) {
                 const checks = JSON.parse(saved);
                 litematicBlocks.forEach(block => {
-                    if (checks[block.name] !== undefined) block.checked = checks[block.name];
+                    if (checks[block.name] !== undefined) {
+                        block.checked = checks[block.name];
+                    }
                 });
             }
         } catch (error) {
@@ -1187,7 +1337,8 @@
         const context = canvas.getContext('2d');
         canvas.width = 512;
         canvas.height = 256;
-        context.clearRect(0, 0, 512, 256);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = 'white';
         context.font = 'bold 180px Inter, Arial, sans-serif';
         context.textAlign = 'center';
@@ -1196,14 +1347,17 @@
 
         const texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
-        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+
+        const spriteMaterial = new THREE.SpriteMaterial({
             map: texture,
             depthTest: false,
             depthWrite: false,
             transparent: true
-        }));
+        });
+        const sprite = new THREE.Sprite(spriteMaterial);
         sprite.scale.set(6, 3, 1);
         sprite.renderOrder = 1000;
+
         return sprite;
     }
 
@@ -1236,8 +1390,14 @@
             userInteracting = true;
             animating = false;
         });
-        controls.addEventListener('end', () => userInteracting = false);
-        controls.addEventListener('change', () => cameraMovedSinceLastClick = true);
+
+        controls.addEventListener('end', () => {
+            userInteracting = false;
+        });
+
+        controls.addEventListener('change', () => {
+            cameraMovedSinceLastClick = true;
+        });
 
         scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
@@ -1316,7 +1476,10 @@
         document.getElementById('main-content').style.display = 'none';
         if (!scene) initThreeJS();
         await loadModel();
-        setTimeout(showDisclaimer, 500);
+        
+        setTimeout(() => {
+            showDisclaimer();
+        }, 500);
     });
 
     async function loadModel() {
@@ -1371,15 +1534,22 @@
                 const mtls = mtlLoader.parse(mtlContent);
                 mtls.preload();
                 
-                // ИСПРАВЛЕНИЕ: правильная настройка материалов
                 for (const [matName, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
                     
                     const isTransparent = shouldBeTransparent(matName);
-                    mat.transparent = isTransparent;
-                    mat.depthWrite = !isTransparent;
-                    mat.alphaTest = isTransparent ? 0.1 : 0;
-                    mat.opacity = 1.0;
+                    
+                    if (isTransparent) {
+                        mat.transparent = true;
+                        mat.depthWrite = false;
+                        mat.alphaTest = 0.1;
+                        mat.opacity = 1.0;
+                    } else {
+                        mat.transparent = false;
+                        mat.depthWrite = true;
+                        mat.alphaTest = 0;
+                        mat.opacity = 1.0;
+                    }
                     
                     if (mat.map) {
                         mat.map.magFilter = THREE.LinearFilter;
@@ -1409,11 +1579,20 @@
                         const materials = Array.isArray(child.material) ? child.material : [child.material];
                         materials.forEach(m => {
                             m.side = THREE.DoubleSide;
+                            
                             const isTransparent = shouldBeTransparent(m.name);
-                            m.transparent = isTransparent;
-                            m.depthWrite = !isTransparent;
-                            m.alphaTest = isTransparent ? 0.1 : 0;
-                            m.opacity = 1.0;
+                            
+                            if (isTransparent) {
+                                m.transparent = true;
+                                m.depthWrite = false;
+                                m.alphaTest = 0.1;
+                                m.opacity = 1.0;
+                            } else {
+                                m.transparent = false;
+                                m.depthWrite = true;
+                                m.alphaTest = 0;
+                                m.opacity = 1.0;
+                            }
                         });
                     }
                     
@@ -1463,7 +1642,9 @@
                 document.getElementById('toggle-texture').classList.add('active');
             }
 
-            if (litematicBlocks.length > 0) updateMaterialList();
+            if (litematicBlocks.length > 0) {
+                updateMaterialList();
+            }
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('viewer-container').style.display = 'block';
@@ -1490,7 +1671,6 @@
 
     function applyTextures() {
         const currentTextures = isCustomMode ? customTextures : defaultTextures;
-        
         allMeshes.forEach(mesh => {
             if (!mesh.material) return;
             const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -1508,25 +1688,45 @@
                     mat.map = texture;
                     
                     const isTransparent = shouldBeTransparent(mat.name);
-                    mat.transparent = isTransparent;
-                    mat.depthWrite = !isTransparent;
-                    mat.alphaTest = isTransparent ? 0.1 : 0;
-                    mat.opacity = 1.0;
+                    if (isTransparent) {
+                        mat.transparent = true;
+                        mat.depthWrite = false;
+                        mat.alphaTest = 0.1;
+                        mat.opacity = 1.0;
+                    } else {
+                        mat.transparent = false;
+                        mat.depthWrite = true;
+                        mat.alphaTest = 0;
+                        mat.opacity = 1.0;
+                    }
+                    
                     mat.needsUpdate = true;
+                    return;
                 }
             });
         });
     }
 
     function snapToBlockEdge(point) {
-        return new THREE.Vector3(Math.round(point.x), Math.round(point.y), Math.round(point.z));
+        return new THREE.Vector3(
+            Math.round(point.x),
+            Math.round(point.y),
+            Math.round(point.z)
+        );
     }
 
     function getStraightLine(p1, p2) {
-        const dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y), dz = Math.abs(p2.z - p1.z);
-        if (dx >= dy && dx >= dz) return new THREE.Vector3(p2.x, p1.y, p1.z);
-        if (dy >= dx && dy >= dz) return new THREE.Vector3(p1.x, p2.y, p1.z);
-        return new THREE.Vector3(p1.x, p1.y, p2.z);
+        const dx = Math.abs(p2.x - p1.x);
+        const dy = Math.abs(p2.y - p1.y);
+        const dz = Math.abs(p2.z - p1.z);
+
+        if (dx >= dy && dx >= dz) {
+            return new THREE.Vector3(p2.x, p1.y, p1.z);
+        } else if (dy >= dx && dy >= dz) {
+            return new THREE.Vector3(p1.x, p2.y, p1.z);
+        } else {
+            return new THREE.Vector3(p1.x, p1.y, p2.z);
+        }
     }
 
     function manhattanDistance(p1, p2) {
@@ -1548,41 +1748,45 @@
 
     function clearRuler() {
         rulerPoints = [];
-        if (rulerLine) { scene.remove(rulerLine); rulerLine = null; }
-        if (rulerTextSprite) { scene.remove(rulerTextSprite); rulerTextSprite = null; }
+        if (rulerLine) {
+            scene.remove(rulerLine);
+            rulerLine = null;
+        }
+        if (rulerTextSprite) {
+            scene.remove(rulerTextSprite);
+            rulerTextSprite = null;
+        }
         rulerSpheres.forEach(sphere => scene.remove(sphere));
         rulerSpheres = [];
     }
 
-    let mouseMoveTimeout;
     document.addEventListener('mousemove', (event) => {
         if (!renderer || !renderer.domElement) return;
-        
-        clearTimeout(mouseMoveTimeout);
-        mouseMoveTimeout = setTimeout(() => {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-            raycaster.setFromCamera(mouse, camera);
-            const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
-            const intersects = raycaster.intersectObjects(visibleMeshes, false);
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-            if (rulerActive && rulerPoints.length < 2) {
-                if (intersects.length > 0) {
-                    const snappedPoint = snapToBlockEdge(intersects[0].point);
-                    if (rulerPoints.length === 1) {
-                        const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
-                        previewSphere.position.copy(straightPoint);
-                    } else {
-                        previewSphere.position.copy(snappedPoint);
-                    }
-                    previewSphere.visible = true;
+        raycaster.setFromCamera(mouse, camera);
+        const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
+        const intersects = raycaster.intersectObjects(visibleMeshes, false);
+
+        if (rulerActive && rulerPoints.length < 2) {
+            if (intersects.length > 0) {
+                const rawPoint = intersects[0].point;
+                const snappedPoint = snapToBlockEdge(rawPoint);
+
+                if (rulerPoints.length === 1) {
+                    const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
+                    previewSphere.position.copy(straightPoint);
                 } else {
-                    previewSphere.visible = false;
+                    previewSphere.position.copy(snappedPoint);
                 }
+                previewSphere.visible = true;
+            } else {
+                previewSphere.visible = false;
             }
-        }, 16);
+        }
     });
 
     document.addEventListener('click', (event) => {
@@ -1606,8 +1810,15 @@
         const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
         if (intersects.length > 0) {
-            const snappedPoint = snapToBlockEdge(intersects[0].point);
-            let finalPoint = rulerPoints.length === 1 ? getStraightLine(rulerPoints[0], snappedPoint) : snappedPoint;
+            const rawPoint = intersects[0].point;
+            const snappedPoint = snapToBlockEdge(rawPoint);
+
+            let finalPoint = snappedPoint;
+
+            if (rulerPoints.length === 1) {
+                finalPoint = getStraightLine(rulerPoints[0], snappedPoint);
+            }
+
             rulerPoints.push(finalPoint);
 
             const sphereGeom = new THREE.SphereGeometry(0.3, 8, 8);
@@ -1620,25 +1831,36 @@
 
             if (rulerPoints.length === 2) {
                 previewSphere.visible = false;
+
                 const lineGeom = new THREE.BufferGeometry().setFromPoints(rulerPoints);
-                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, depthTest: false });
+                const lineMat = new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                    linewidth: 2,
+                    depthTest: false
+                });
                 rulerLine = new THREE.Line(lineGeom, lineMat);
                 rulerLine.renderOrder = 998;
                 scene.add(rulerLine);
 
                 const distance = manhattanDistance(rulerPoints[0], rulerPoints[1]);
+
                 const midPoint = new THREE.Vector3().addVectors(rulerPoints[0], rulerPoints[1]).multiplyScalar(0.5);
                 rulerTextSprite = createTextSprite(distance.toString());
                 rulerTextSprite.position.copy(midPoint);
                 rulerTextSprite.position.y += 2;
                 scene.add(rulerTextSprite);
+
                 cameraMovedSinceLastClick = false;
             }
         }
     });
 
     let touchMoved = false;
-    document.addEventListener('touchstart', () => touchMoved = false);
+
+    document.addEventListener('touchstart', (event) => {
+        touchMoved = false;
+    });
+
     document.addEventListener('touchmove', (event) => {
         if (!renderer || !renderer.domElement) return;
         touchMoved = true;
@@ -1652,14 +1874,21 @@
         const visibleMeshes = allMeshes.filter(mesh => mesh.visible);
         const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
-        if (rulerActive && rulerPoints.length < 2 && intersects.length > 0) {
-            const snappedPoint = snapToBlockEdge(intersects[0].point);
-            if (rulerPoints.length === 1) {
-                previewSphere.position.copy(getStraightLine(rulerPoints[0], snappedPoint));
+        if (rulerActive && rulerPoints.length < 2) {
+            if (intersects.length > 0) {
+                const rawPoint = intersects[0].point;
+                const snappedPoint = snapToBlockEdge(rawPoint);
+
+                if (rulerPoints.length === 1) {
+                    const straightPoint = getStraightLine(rulerPoints[0], snappedPoint);
+                    previewSphere.position.copy(straightPoint);
+                } else {
+                    previewSphere.position.copy(snappedPoint);
+                }
+                previewSphere.visible = true;
             } else {
-                previewSphere.position.copy(snappedPoint);
+                previewSphere.visible = false;
             }
-            previewSphere.visible = true;
         }
     });
 
@@ -1685,8 +1914,15 @@
         const intersects = raycaster.intersectObjects(visibleMeshes, false);
 
         if (intersects.length > 0) {
-            const snappedPoint = snapToBlockEdge(intersects[0].point);
-            let finalPoint = rulerPoints.length === 1 ? getStraightLine(rulerPoints[0], snappedPoint) : snappedPoint;
+            const rawPoint = intersects[0].point;
+            const snappedPoint = snapToBlockEdge(rawPoint);
+
+            let finalPoint = snappedPoint;
+
+            if (rulerPoints.length === 1) {
+                finalPoint = getStraightLine(rulerPoints[0], snappedPoint);
+            }
+
             rulerPoints.push(finalPoint);
 
             const sphereGeom = new THREE.SphereGeometry(0.3, 8, 8);
@@ -1699,18 +1935,25 @@
 
             if (rulerPoints.length === 2) {
                 previewSphere.visible = false;
+
                 const lineGeom = new THREE.BufferGeometry().setFromPoints(rulerPoints);
-                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, depthTest: false });
+                const lineMat = new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                    linewidth: 2,
+                    depthTest: false
+                });
                 rulerLine = new THREE.Line(lineGeom, lineMat);
                 rulerLine.renderOrder = 998;
                 scene.add(rulerLine);
 
                 const distance = manhattanDistance(rulerPoints[0], rulerPoints[1]);
+
                 const midPoint = new THREE.Vector3().addVectors(rulerPoints[0], rulerPoints[1]).multiplyScalar(0.5);
                 rulerTextSprite = createTextSprite(distance.toString());
                 rulerTextSprite.position.copy(midPoint);
                 rulerTextSprite.position.y += 2;
                 scene.add(rulerTextSprite);
+
                 cameraMovedSinceLastClick = false;
             }
         }
@@ -1742,7 +1985,8 @@
         currentFOV = currentFOV === 40 ? 60 : 40;
         camera.fov = currentFOV;
         camera.updateProjectionMatrix();
-        document.getElementById('fov-toggle').classList.toggle('active');
+        const btn = document.getElementById('fov-toggle');
+        btn.classList.toggle('active');
     });
 
     document.getElementById('share-button')?.addEventListener('click', async () => {
@@ -1757,21 +2001,26 @@
             const shareZip = new JSZip();
             shareZip.file('model.zip', modelZip);
 
-            if (litematicFile) shareZip.file('litematic.litematic', litematicFile);
+            if (litematicFile) {
+                shareZip.file('litematic.litematic', litematicFile);
+            }
 
             if (hasCustomTextures && Object.keys(customTextures).length > 0) {
+                console.log('📦 Saving', Object.keys(customTextures).length, 'custom textures...');
                 const texturesFolder = shareZip.folder('custom_textures');
                 for (const [filename, blobUrl] of Object.entries(customTextures)) {
-                    const blob = await fetch(blobUrl).then(r => r.blob());
+                    const response = await fetch(blobUrl);
+                    const blob = await response.blob();
                     texturesFolder.file(filename, blob);
+                    console.log('✅ Saved:', filename);
                 }
             }
 
             const metadata = {
-                currentLayer,
-                totalLayers,
+                currentLayer: currentLayer,
+                totalLayers: totalLayers,
                 hasLitematic: !!litematicFile,
-                hasCustomTextures,
+                hasCustomTextures: hasCustomTextures,
                 customTexturesCount: Object.keys(customTextures).length,
                 timestamp: Date.now()
             };
@@ -1779,6 +2028,7 @@
 
             const blob = await shareZip.generateAsync({ type: 'blob' });
             const url = URL.createObjectURL(blob);
+
             const a = document.createElement('a');
             a.href = url;
             const fileName = 'model-' + Date.now();
@@ -1787,18 +2037,20 @@
 
             document.getElementById('loading').style.display = 'none';
 
+            const shareUrl = window.location.origin + '/?view=' + fileName;
+            
             let message = '✅ Share file created!\n\n' +
                 '📝 Instructions:\n' +
-                '1. Upload ' + fileName + '.mcviewer to /shared/ folder\n' +
-                '2. Push to GitHub\n' +
-                '3. Share link:\n\n' +
-                window.location.origin + '/?view=' + fileName;
+                '1. Upload ' + fileName + '.mcviewer to /shared/ folder on GitHub\n' +
+                '2. Push changes to GitHub\n' +
+                '3. Share this link:\n\n' +
+                shareUrl;
             
             if (hasCustomTextures) {
-                message += '\n\n🎨 Textures: ' + Object.keys(customTextures).length;
+                message += '\n\n🎨 Custom textures included: ' + Object.keys(customTextures).length;
             }
             
-            prompt(message, window.location.origin + '/?view=' + fileName);
+            prompt(message, shareUrl);
 
         } catch (error) {
             console.error('Share error:', error);
@@ -1824,6 +2076,7 @@
                 const worldPos = new THREE.Vector3();
                 mesh.getWorldPosition(worldPos);
                 const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+                
                 if (mesh.visible !== shouldBeVisible) {
                     mesh.visible = shouldBeVisible;
                 }
@@ -1835,16 +2088,11 @@
         document.getElementById('layer-info-top').textContent = 'Layer ' + currentLayer + ' / ' + totalLayers;
     }
 
-    let sliderTimeout;
     document.getElementById('layer-slider').addEventListener('input', (e) => {
-        clearTimeout(sliderTimeout);
         currentLayer = parseInt(e.target.value);
+        updateVisibility();
         updateLayerDisplay();
-        
-        sliderTimeout = setTimeout(() => {
-            updateVisibility();
-            updateCameraHeight();
-        }, 50);
+        updateCameraHeight();
     });
 
     document.getElementById('arrow-left').addEventListener('click', () => {
