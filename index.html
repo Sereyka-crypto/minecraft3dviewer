@@ -876,7 +876,7 @@
         <button class="disclaimer-notification-close" id="disclaimer-close">×</button>
     </div>
     <div class="disclaimer-notification-content">
-        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Sereyka Minecraft Layer Viewer is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
+        This 3D guide is not a reproduction of the Minecraft® game. It is an original and independent creation designed to assist players and enhance their building experience. Sereyka Layer Viewer is not affiliated with, endorsed, authorized, or sponsored by Mojang Studios, Microsoft, or any of their affiliates. All rights to Minecraft® and related assets are owned by Mojang Studios and Microsoft.
     </div>
 </div>
 
@@ -1375,8 +1375,6 @@
         
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(innerWidth, innerHeight);
-        
-        // ОПТИМИЗАЦИЯ: включаем сортировку объектов для лучшей производительности
         renderer.sortObjects = true;
         
         document.getElementById('viewer-container').appendChild(renderer.domElement);
@@ -1539,17 +1537,14 @@
                 for (const [matName, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
                     
-                    // ОПТИМИЗАЦИЯ + ПРОЗРАЧНОСТЬ: проверяем, должен ли материал быть прозрачным
                     const isTransparent = shouldBeTransparent(matName);
                     
                     if (isTransparent) {
-                        // Для стекла и цветов в горшках
                         mat.transparent = true;
                         mat.depthWrite = false;
                         mat.alphaTest = 0.1;
                         mat.opacity = 1.0;
                     } else {
-                        // Для остальных блоков - полная непрозрачность
                         mat.transparent = false;
                         mat.depthWrite = true;
                         mat.alphaTest = 0;
@@ -1560,8 +1555,6 @@
                         mat.map.magFilter = THREE.LinearFilter;
                         mat.map.minFilter = THREE.LinearMipMapLinearFilter;
                         mat.map.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
-                        
-                        // ОПТИМИЗАЦИЯ: отключаем генерацию мипмапов для статичных моделей
                         mat.map.generateMipmaps = false;
                     }
                 }
@@ -1571,9 +1564,6 @@
             model = loader.parse(objContent);
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
-
-            // ОПТИМИЗАЦИЯ: объединяем геометрии для лучшей производительности
-            const geometryCache = new Map();
 
             model.traverse(child => {
                 if (child.isMesh) {
@@ -1590,7 +1580,6 @@
                         materials.forEach(m => {
                             m.side = THREE.DoubleSide;
                             
-                            // ОПТИМИЗАЦИЯ + ПРОЗРАЧНОСТЬ
                             const isTransparent = shouldBeTransparent(m.name);
                             
                             if (isTransparent) {
@@ -1607,10 +1596,7 @@
                         });
                     }
                     
-                    // ОПТИМИЗАЦИЯ: включаем frustum culling для всех мешей
                     child.frustumCulled = true;
-                    
-                    // ОПТИМИЗАЦИЯ: отключаем матрицу автообновления для статичных объектов
                     child.matrixAutoUpdate = false;
                     child.updateMatrix();
                 }
@@ -1669,9 +1655,7 @@
             document.getElementById('right-controls').style.display = 'flex';
             document.getElementById('layer-slider-container').style.display = 'block';
             
-            console.log('✅ Model loaded successfully');
-            console.log('📊 Total meshes:', allMeshes.length);
-            console.log('📊 Total layers:', totalLayers);
+            console.log('✅ Model loaded - Meshes:', allMeshes.length, 'Layers:', totalLayers);
         } catch (error) {
             alert('Error: ' + error.message);
             console.error(error);
@@ -1700,10 +1684,9 @@
                     texture.magFilter = THREE.LinearFilter;
                     texture.minFilter = THREE.LinearMipMapLinearFilter;
                     texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
-                    texture.generateMipmaps = false; // ОПТИМИЗАЦИЯ
+                    texture.generateMipmaps = false;
                     mat.map = texture;
                     
-                    // ПРОЗРАЧНОСТЬ при смене текстур
                     const isTransparent = shouldBeTransparent(mat.name);
                     if (isTransparent) {
                         mat.transparent = true;
@@ -2085,18 +2068,15 @@
         animating = true;
     }
 
-    // ОПТИМИЗАЦИЯ: улучшенная функция видимости с батчингом
     function updateVisibility() {
         const currentMaxY = minY + currentLayer;
         
-        // Батчинг обновлений видимости
         requestAnimationFrame(() => {
             allMeshes.forEach(mesh => {
                 const worldPos = new THREE.Vector3();
                 mesh.getWorldPosition(worldPos);
                 const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
                 
-                // Обновляем только если изменилось
                 if (mesh.visible !== shouldBeVisible) {
                     mesh.visible = shouldBeVisible;
                 }
@@ -2145,7 +2125,6 @@
         }
     });
 
-    // ОПТИМИЗАЦИЯ: throttle для resize события
     let resizeTimeout;
     addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
