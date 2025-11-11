@@ -1521,10 +1521,13 @@
                 mtls.preload();
                 for (const [, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
-                    if (mat.transparent) {
-                        mat.depthWrite = false;
-                        mat.alphaTest = 0.1;
-                    }
+                    // ИСПРАВЛЕНИЕ: убираем настройки прозрачности
+                    // Теперь все блоки будут полностью видимыми
+                    mat.transparent = true; // Оставляем true для поддержки текстур с альфа-каналом
+                    mat.depthWrite = true; // ИЗМЕНЕНО: включаем depthWrite
+                    mat.alphaTest = 0.5; // ИЗМЕНЕНО: увеличиваем до 0.5 для лучшей видимости
+                    mat.opacity = 1.0; // Полная непрозрачность
+                    
                     if (mat.map) {
                         mat.map.magFilter = THREE.LinearFilter;
                         mat.map.minFilter = THREE.LinearMipMapLinearFilter;
@@ -1548,8 +1551,23 @@
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
                     if (child.material) {
-                        if (Array.isArray(child.material)) child.material.forEach(m => m.side = THREE.DoubleSide);
-                        else child.material.side = THREE.DoubleSide;
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(m => {
+                                m.side = THREE.DoubleSide;
+                                // ИСПРАВЛЕНИЕ для уже загруженных материалов
+                                m.transparent = true;
+                                m.depthWrite = true;
+                                m.alphaTest = 0.5;
+                                m.opacity = 1.0;
+                            });
+                        } else {
+                            child.material.side = THREE.DoubleSide;
+                            // ИСПРАВЛЕНИЕ для уже загруженных материалов
+                            child.material.transparent = true;
+                            child.material.depthWrite = true;
+                            child.material.alphaTest = 0.5;
+                            child.material.opacity = 1.0;
+                        }
                     }
                     child.frustumCulled = true;
                 }
@@ -1636,6 +1654,13 @@
                     texture.minFilter = THREE.LinearMipMapLinearFilter;
                     texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
                     mat.map = texture;
+                    
+                    // ИСПРАВЛЕНИЕ: применяем настройки видимости при смене текстур
+                    mat.transparent = true;
+                    mat.depthWrite = true;
+                    mat.alphaTest = 0.5;
+                    mat.opacity = 1.0;
+                    
                     mat.needsUpdate = true;
                     return;
                 }
