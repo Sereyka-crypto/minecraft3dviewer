@@ -878,10 +878,6 @@
 </div>
 
 <script>
-    // ============================================
-    // 🚀 ОПТИМИЗИРОВАННАЯ ВЕРСИЯ С МАКСИМАЛЬНОЙ ПРОИЗВОДИТЕЛЬНОСТЬЮ
-    // ============================================
-    
     'use strict';
     
     // Глобальные переменные
@@ -893,27 +889,11 @@
     let currentFOV = 40;
     let litematicBlocks = [];
 
-    // Ruler
     let rulerActive = false, rulerPoints = [], rulerLine = null, rulerSpheres = [], previewSphere = null, rulerTextSprite = null;
     let raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(), cameraMovedSinceLastClick = false;
 
-    // Camera settings
     let cameraRotation = 90, cameraTilt = 60;
 
-    // ОПТИМИЗАЦИЯ: Кэш для переиспользования объектов
-    const vectorPool = {
-        vectors: [],
-        get() {
-            return this.vectors.pop() || new THREE.Vector3();
-        },
-        release(v) {
-            v.set(0, 0, 0);
-            this.vectors.push(v);
-        }
-    };
-
-    // Константы
-    const TRANSPARENT_MATERIALS = ['glass', 'pane', 'potted', 'stained_glass'];
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
         "Potatoes": "Potato",
@@ -921,20 +901,18 @@
         "Wheat Crops": "Wheat",
         "Water Cauldron": "Cauldron"
     };
+
     const BLOCKS_WITHOUT_TEXTURES = ["Nether Portal", "End Portal", "End Gateway"];
 
-    // ОПТИМИЗАЦИЯ: Проверка прозрачности (кэшируем результаты)
-    const transparencyCache = new Map();
+    // Прозрачность только для стекла и цветов в горшках
+    const TRANSPARENT_MATERIALS = ['glass', 'pane', 'potted', 'stained_glass'];
+    
     function shouldBeTransparent(materialName) {
         if (!materialName) return false;
-        if (transparencyCache.has(materialName)) return transparencyCache.get(materialName);
         const nameLower = materialName.toLowerCase();
-        const result = TRANSPARENT_MATERIALS.some(keyword => nameLower.includes(keyword));
-        transparencyCache.set(materialName, result);
-        return result;
+        return TRANSPARENT_MATERIALS.some(keyword => nameLower.includes(keyword));
     }
 
-    // Инициализация
     document.getElementById('rotation-slider').addEventListener('input', (e) => {
         cameraRotation = parseInt(e.target.value);
         document.getElementById('rotation-value').textContent = cameraRotation + '°';
@@ -953,7 +931,6 @@
         document.getElementById('disclaimer-notification').classList.remove('active');
     });
 
-    // Секретная кнопка
     let clickCount = 0, clickTimer = null;
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -1235,34 +1212,25 @@
         scene.background = new THREE.Color(0x2a2a2a);
         camera = new THREE.PerspectiveCamera(currentFOV, innerWidth / innerHeight, 0.1, 10000);
         
-        // ОПТИМИЗАЦИЯ: Максимальная производительность рендерера
         renderer = new THREE.WebGLRenderer({
             antialias: true,
             preserveDrawingBuffer: true,
             powerPreference: 'high-performance',
-            precision: 'highp',
-            alpha: false,
-            stencil: false,
-            depth: true
+            precision: 'highp'
         });
         
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(innerWidth, innerHeight);
         renderer.sortObjects = true;
-        renderer.shadowMap.enabled = false; // ОПТИМИЗАЦИЯ: отключаем тени
         
         document.getElementById('viewer-container').appendChild(renderer.domElement);
 
-        // ОПТИМИЗАЦИЯ: Damping для плавности
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.screenSpacePanning = true;
         controls.maxDistance = 5000;
         controls.minDistance = 5;
-        controls.zoomSpeed = 1.2;
-        controls.rotateSpeed = 1.0;
-        controls.panSpeed = 0.8;
 
         controls.addEventListener('start', () => {
             userInteracting = true;
@@ -1288,7 +1256,6 @@
         animate();
     }
 
-    // ОПТИМИЗАЦИЯ: Оптимизированный цикл анимации
     function animate() {
         requestAnimationFrame(animate);
 
@@ -1358,27 +1325,21 @@
             let objContent = null, mtlContent = null;
             defaultTextures = {};
 
-            // ОПТИМИЗАЦИЯ: Параллельная загрузка файлов
-            const filePromises = [];
             for (const [filename, file] of Object.entries(zip.files)) {
                 if (file.dir) continue;
                 const name = filename.toLowerCase();
 
                 if (name.endsWith('.obj')) {
-                    filePromises.push(file.async('text').then(content => objContent = content));
+                    objContent = await file.async('text');
                 }
                 else if (name.endsWith('.mtl')) {
-                    filePromises.push(file.async('text').then(content => mtlContent = content));
+                    mtlContent = await file.async('text');
                 }
                 else if (name.match(/\.(png|jpg|jpeg)$/i)) {
                     const texName = filename.split('/').pop().split('\\').pop();
-                    filePromises.push(
-                        file.async('blob').then(blob => defaultTextures[texName] = URL.createObjectURL(blob))
-                    );
+                    defaultTextures[texName] = URL.createObjectURL(await file.async('blob'));
                 }
             }
-
-            await Promise.all(filePromises);
 
             if (!objContent) { alert('No OBJ file!'); location.reload(); return; }
 
@@ -1410,6 +1371,7 @@
                 const mtls = mtlLoader.parse(mtlContent);
                 mtls.preload();
                 
+                // ИСПРАВЛЕНИЕ: правильная настройка материалов
                 for (const [matName, mat] of Object.entries(mtls.materials)) {
                     mat.side = THREE.DoubleSide;
                     
@@ -1423,7 +1385,7 @@
                         mat.map.magFilter = THREE.LinearFilter;
                         mat.map.minFilter = THREE.LinearMipMapLinearFilter;
                         mat.map.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
-                        mat.map.generateMipmaps = false; // ОПТИМИЗАЦИЯ
+                        mat.map.generateMipmaps = false;
                     }
                 }
                 loader.setMaterials(mtls);
@@ -1433,17 +1395,15 @@
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
 
-            // ОПТИМИЗАЦИЯ: Батчинг обработки мешей
             model.traverse(child => {
                 if (child.isMesh) {
                     allMeshes.push(child);
                     child.geometry.computeBoundingBox();
                     const box = child.geometry.boundingBox;
-                    const worldPos = vectorPool.get();
+                    const worldPos = new THREE.Vector3();
                     child.getWorldPosition(worldPos);
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
-                    vectorPool.release(worldPos);
                     
                     if (child.material) {
                         const materials = Array.isArray(child.material) ? child.material : [child.material];
@@ -1458,7 +1418,7 @@
                     }
                     
                     child.frustumCulled = true;
-                    child.matrixAutoUpdate = false; // ОПТИМИЗАЦИЯ
+                    child.matrixAutoUpdate = false;
                     child.updateMatrix();
                 }
             });
@@ -1531,32 +1491,29 @@
     function applyTextures() {
         const currentTextures = isCustomMode ? customTextures : defaultTextures;
         
-        // ОПТИМИЗАЦИЯ: Батчинг обновлений текстур
-        requestAnimationFrame(() => {
-            allMeshes.forEach(mesh => {
-                if (!mesh.material) return;
-                const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-                mats.forEach(mat => {
-                    if (!mat.name) return;
-                    const texName = textureMap[mat.name];
-                    if (!texName) return;
-                    const cleanTexName = texName.split('/').pop().split('\\').pop();
-                    if (currentTextures[cleanTexName]) {
-                        const texture = new THREE.TextureLoader().load(currentTextures[cleanTexName]);
-                        texture.magFilter = THREE.LinearFilter;
-                        texture.minFilter = THREE.LinearMipMapLinearFilter;
-                        texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
-                        texture.generateMipmaps = false;
-                        mat.map = texture;
-                        
-                        const isTransparent = shouldBeTransparent(mat.name);
-                        mat.transparent = isTransparent;
-                        mat.depthWrite = !isTransparent;
-                        mat.alphaTest = isTransparent ? 0.1 : 0;
-                        mat.opacity = 1.0;
-                        mat.needsUpdate = true;
-                    }
-                });
+        allMeshes.forEach(mesh => {
+            if (!mesh.material) return;
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mats.forEach(mat => {
+                if (!mat.name) return;
+                const texName = textureMap[mat.name];
+                if (!texName) return;
+                const cleanTexName = texName.split('/').pop().split('\\').pop();
+                if (currentTextures[cleanTexName]) {
+                    const texture = new THREE.TextureLoader().load(currentTextures[cleanTexName]);
+                    texture.magFilter = THREE.LinearFilter;
+                    texture.minFilter = THREE.LinearMipMapLinearFilter;
+                    texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+                    texture.generateMipmaps = false;
+                    mat.map = texture;
+                    
+                    const isTransparent = shouldBeTransparent(mat.name);
+                    mat.transparent = isTransparent;
+                    mat.depthWrite = !isTransparent;
+                    mat.alphaTest = isTransparent ? 0.1 : 0;
+                    mat.opacity = 1.0;
+                    mat.needsUpdate = true;
+                }
             });
         });
     }
@@ -1597,7 +1554,6 @@
         rulerSpheres = [];
     }
 
-    // ОПТИМИЗАЦИЯ: Throttle для mousemove
     let mouseMoveTimeout;
     document.addEventListener('mousemove', (event) => {
         if (!renderer || !renderer.domElement) return;
@@ -1626,7 +1582,7 @@
                     previewSphere.visible = false;
                 }
             }
-        }, 16); // ~60fps throttle
+        }, 16);
     });
 
     document.addEventListener('click', (event) => {
@@ -1681,7 +1637,6 @@
         }
     });
 
-    // Touch events (аналогично)
     let touchMoved = false;
     document.addEventListener('touchstart', () => touchMoved = false);
     document.addEventListener('touchmove', (event) => {
@@ -1861,20 +1816,18 @@
         animating = true;
     }
 
-    // ОПТИМИЗАЦИЯ: Батчинг обновлений видимости
     function updateVisibility() {
         const currentMaxY = minY + currentLayer;
         
         requestAnimationFrame(() => {
-            const worldPos = vectorPool.get();
             allMeshes.forEach(mesh => {
+                const worldPos = new THREE.Vector3();
                 mesh.getWorldPosition(worldPos);
                 const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
                 if (mesh.visible !== shouldBeVisible) {
                     mesh.visible = shouldBeVisible;
                 }
             });
-            vectorPool.release(worldPos);
         });
     }
 
@@ -1882,7 +1835,6 @@
         document.getElementById('layer-info-top').textContent = 'Layer ' + currentLayer + ' / ' + totalLayers;
     }
 
-    // ОПТИМИЗАЦИЯ: Debounce для slider
     let sliderTimeout;
     document.getElementById('layer-slider').addEventListener('input', (e) => {
         clearTimeout(sliderTimeout);
@@ -1925,7 +1877,6 @@
         }
     });
 
-    // ОПТИМИЗАЦИЯ: Throttle для resize
     let resizeTimeout;
     addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
