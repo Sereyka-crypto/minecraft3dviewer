@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Minecraft Layer Viewer5⚒️</title>
+    <title>Minecraft Layer ViewerV6⚒️</title>
     
     <link rel="icon" type="image/png" href="/skin-avatar.png">
     
@@ -24,13 +24,11 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </noscript>
 
-    <!-- ⚠️ ИСПРАВЛЕНИЕ: Three.js БЕЗ defer (должен загружаться синхронно) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
-    <!-- 🚀 ОПТИМИЗАЦИЯ: Эти библиотеки можно загружать с defer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" defer></script>
 
@@ -230,6 +228,13 @@
 
     let cameraRotation = 90;
     let cameraTilt = 60;
+
+    // ⚡ ОПТИМИЗАЦИЯ: Render On Demand
+    let needsRender = true;
+
+    function requestRender() {
+        needsRender = true;
+    }
 
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
@@ -657,6 +662,7 @@
 
         controls.addEventListener('change', () => {
             cameraMovedSinceLastClick = true;
+            requestRender();
         });
 
         scene.add(new THREE.AmbientLight(0xffffff, 1.0));
@@ -676,8 +682,11 @@
         animate();
     }
 
+    // ⚡⚡⚡ СУПЕР-ОПТИМИЗИРОВАННЫЙ РЕНДЕР ⚡⚡⚡
     function animate() {
         requestAnimationFrame(animate);
+
+        let hasChanges = false;
 
         if (animating && !userInteracting) {
             const deltaY = targetCameraY - camera.position.y;
@@ -686,19 +695,29 @@
             if (Math.abs(deltaY) > 0.01 || Math.abs(deltaTargetY) > 0.01) {
                 camera.position.y += deltaY * 0.08;
                 controls.target.y += deltaTargetY * 0.08;
+                hasChanges = true;
             } else {
                 camera.position.y = targetCameraY;
                 controls.target.y = targetTargetY;
                 animating = false;
+                hasChanges = true;
             }
         }
 
         if (rulerTextSprite && rulerTextSprite.visible) {
             rulerTextSprite.lookAt(camera.position);
+            hasChanges = true;
         }
 
-        controls.update();
-        renderer.render(scene, camera);
+        if (controls.update()) {
+            hasChanges = true;
+        }
+
+        // 🚀 РЕНДЕРИМ ТОЛЬКО ЕСЛИ ЕСТЬ ИЗМЕНЕНИЯ
+        if (needsRender || hasChanges) {
+            renderer.render(scene, camera);
+            needsRender = false;
+        }
     }
 
     document.getElementById('model-input').addEventListener('change', (e) => {
@@ -813,41 +832,63 @@
             allMeshes = [];
             minY = Infinity; maxY = -Infinity;
 
-            // ⚡ ОПТИМИЗАЦИЯ 1: Улучшенный Frustum Culling + Matrix Freeze
+            // ⚡⚡⚡ СУПЕР-ОПТИМИЗАЦИЯ ДЛЯ БОЛЬШИХ МОДЕЛЕЙ ⚡⚡⚡
+            const meshDataForLayers = [];
+
             model.traverse(child => {
                 if (child.isMesh) {
-                    allMeshes.push(child);
                     child.geometry.computeBoundingBox();
                     const box = child.geometry.boundingBox;
                     const worldPos = new THREE.Vector3();
                     child.getWorldPosition(worldPos);
+                    
+                    const meshY = worldPos.y + box.max.y;
                     minY = Math.min(minY, worldPos.y + box.min.y);
                     maxY = Math.max(maxY, worldPos.y + box.max.y);
                     
-                    // ⚡ НОВАЯ ОПТИМИЗАЦИЯ - отключаем автообновление матриц (объекты статичны)
+                    meshDataForLayers.push({
+                        mesh: child,
+                        y: meshY,
+                        worldPos: worldPos.clone()
+                    });
+                    
                     child.frustumCulled = true;
                     child.matrixAutoUpdate = false;
                     child.updateMatrix();
                     
                     if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(m => {
-                                m.side = THREE.DoubleSide;
-                                m.transparent = false;
-                                m.depthWrite = true;
-                                m.alphaTest = 0;
-                                m.opacity = 1.0;
-                            });
-                        } else {
-                            child.material.side = THREE.DoubleSide;
-                            child.material.transparent = false;
-                            child.material.depthWrite = true;
-                            child.material.alphaTest = 0;
-                            child.material.opacity = 1.0;
-                        }
+                        const mats = Array.isArray(child.material) ? child.material : [child.material];
+                        mats.forEach(m => {
+                            m.side = THREE.DoubleSide;
+                            m.transparent = false;
+                            m.depthWrite = true;
+                            m.alphaTest = 0;
+                            m.opacity = 1.0;
+                        });
                     }
+                    
+                    allMeshes.push(child);
                 }
             });
+
+            // ⚡ ОПТИМИЗАЦИЯ: Группируем блоки по слоям для быстрого переключения
+            console.log('🔧 Оптимизация: группировка', allMeshes.length, 'блоков по слоям...');
+
+            totalLayers = Math.ceil(maxY - minY);
+            layerHeight = (maxY - minY) / totalLayers;
+
+            const meshesPerLayer = new Array(totalLayers + 1).fill(null).map(() => []);
+
+            meshDataForLayers.forEach(data => {
+                const layerIndex = Math.floor((data.y - minY) / layerHeight);
+                if (layerIndex >= 0 && layerIndex <= totalLayers) {
+                    meshesPerLayer[layerIndex].push(data.mesh);
+                }
+            });
+
+            window.meshesPerLayer = meshesPerLayer;
+
+            console.log('✅ Оптимизация завершена! Блоков по слоям:', meshesPerLayer.map(l => l.length));
 
             scene.add(model);
             const box = new THREE.Box3().setFromObject(model);
@@ -855,9 +896,6 @@
             modelCenter = center;
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
-
-            totalLayers = Math.ceil(maxY - minY);
-            layerHeight = (maxY - minY) / totalLayers;
 
             const distance = maxDim * 1.8;
             const elevationAngle = cameraTilt * (Math.PI / 180);
@@ -1223,6 +1261,7 @@
         camera.updateProjectionMatrix();
         const btn = document.getElementById('fov-toggle');
         btn.classList.toggle('active');
+        requestRender();
     });
 
     document.getElementById('share-button')?.addEventListener('click', async () => {
@@ -1304,28 +1343,36 @@
         animating = true;
     }
 
-    // ⚡ ОПТИМИЗАЦИЯ 3: Улучшенная видимость слоев
+    // ⚡⚡⚡ СУПЕР-БЫСТРАЯ ВИДИМОСТЬ ПО СЛОЯМ ⚡⚡⚡
     function updateVisibility() {
-        const currentMaxY = minY + currentLayer;
+        if (!window.meshesPerLayer) {
+            const currentMaxY = minY + currentLayer;
+            allMeshes.forEach(mesh => {
+                const worldPos = new THREE.Vector3();
+                mesh.getWorldPosition(worldPos);
+                mesh.visible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+            });
+            return;
+        }
+        
         let visibleCount = 0;
         
-        for (let i = 0; i < allMeshes.length; i++) {
-            const mesh = allMeshes[i];
-            const worldPos = new THREE.Vector3();
-            mesh.getWorldPosition(worldPos);
+        for (let layer = 0; layer <= totalLayers; layer++) {
+            const shouldBeVisible = layer <= currentLayer;
+            const meshesInLayer = window.meshesPerLayer[layer];
             
-            const shouldBeVisible = (worldPos.y + mesh.geometry.boundingBox.max.y) <= currentMaxY + 0.1;
+            if (!meshesInLayer) continue;
             
-            if (mesh.visible !== shouldBeVisible) {
-                mesh.visible = shouldBeVisible;
-            }
-            
-            if (shouldBeVisible) {
-                visibleCount++;
+            for (let i = 0; i < meshesInLayer.length; i++) {
+                const mesh = meshesInLayer[i];
+                if (mesh.visible !== shouldBeVisible) {
+                    mesh.visible = shouldBeVisible;
+                }
+                if (shouldBeVisible) visibleCount++;
             }
         }
         
-        console.log('📊 Visible blocks:', visibleCount, '/', allMeshes.length);
+        console.log('📊 Слой', currentLayer + '/' + totalLayers, '- Видимо:', visibleCount, 'блоков');
     }
 
     function updateLayerDisplay() {
@@ -1337,6 +1384,7 @@
         updateVisibility();
         updateLayerDisplay();
         updateCameraHeight();
+        requestRender();
     });
 
     document.getElementById('arrow-left').addEventListener('click', () => {
@@ -1345,6 +1393,7 @@
         updateVisibility();
         updateLayerDisplay();
         updateCameraHeight();
+        requestRender();
     });
 
     document.getElementById('arrow-right').addEventListener('click', () => {
@@ -1353,6 +1402,7 @@
         updateVisibility();
         updateLayerDisplay();
         updateCameraHeight();
+        requestRender();
     });
 
     document.getElementById('reset-camera').addEventListener('click', () => {
@@ -1366,6 +1416,7 @@
             targetTargetY = firstLayerY + yOffset;
             animating = false;
             userInteracting = false;
+            requestRender();
         }
     });
 
@@ -1374,6 +1425,7 @@
             camera.aspect = innerWidth / innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(innerWidth, innerHeight);
+            requestRender();
         }
     });
 
@@ -1383,6 +1435,7 @@
                 camera.aspect = innerWidth / innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(innerWidth, innerHeight);
+                requestRender();
             }
         }, 100);
     });
