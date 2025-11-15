@@ -196,7 +196,7 @@
 
 <div class="right-controls" id="right-controls">
     <button class="icon-button" id="share-button" title="Share Model"><span class="material-icons">share</span></button>
-    <button class="icon-button" id="current-layer-only" title="Show Current Layer Only"><span class="material-icons">layers</span></button>
+    <button class="icon-button active" id="current-layer-only" title="Show Current Layer Only"><span class="material-icons">layers</span></button>
     <button class="icon-button" id="ruler-toggle" title="Ruler"><span class="material-icons">straighten</span></button>
     <button class="icon-button" id="fov-toggle" title="FOV"><span class="material-icons">photo_camera</span></button>
     <button class="icon-button" id="reset-camera" title="Camera Reset"><span class="material-icons">cameraswitch</span></button>
@@ -230,8 +230,8 @@
     let cameraRotation = 90;
     let cameraTilt = 60;
     
-    // ⚡ НОВАЯ ПЕРЕМЕННАЯ для режима "только текущий слой"
-    let showCurrentLayerOnly = false;
+    // ⚡ ВКЛЮЧЕНО ПО УМОЛЧАНИЮ
+    let showCurrentLayerOnly = true;
 
     const RENAME_DICT = {
         "Beetroots": "Beetroot",
@@ -1305,7 +1305,6 @@
         animating = true;
     }
 
-    // ⚡ НОВАЯ ФУНКЦИЯ с поддержкой "Только текущий слой"
     function updateVisibility() {
         if (showCurrentLayerOnly) {
             // Режим "Только текущий слой"
@@ -1318,7 +1317,6 @@
                 mesh.getWorldPosition(worldPos);
                 const meshY = worldPos.y + mesh.geometry.boundingBox.max.y;
                 
-                // Показываем только блоки текущего слоя
                 const isInCurrentLayer = meshY > currentMinY && meshY <= currentMaxY + 0.1;
                 mesh.visible = isInCurrentLayer;
                 if (isInCurrentLayer) visibleCount++;
@@ -1348,7 +1346,6 @@
         document.getElementById('layer-info-top').textContent = 'Layer ' + currentLayer + ' / ' + totalLayers;
     }
 
-    // ⚡ КНОПКА "Показать только текущий слой"
     document.getElementById('current-layer-only').addEventListener('click', () => {
         showCurrentLayerOnly = !showCurrentLayerOnly;
         const btn = document.getElementById('current-layer-only');
