@@ -61,7 +61,7 @@
                 margin-bottom: 30px;
                 display: block;
                 animation: wave 2s ease-in-out infinite;
-                cursor: pointer;
+                cursor: default;
             ">👋</span>
             <h1 style="
                 font-size: 42px;
@@ -265,34 +265,10 @@
         document.getElementById('disclaimer-notification').classList.remove('active');
     });
 
-    let clickCount = 0;
-    let clickTimer = null;
-
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewFile = urlParams.get('view');
-        const adminMode = urlParams.has('admin');
-        
-        const emoji = document.getElementById('secret-emoji');
-        if (emoji) {
-            emoji.addEventListener('click', () => {
-                clickCount++;
-                
-                if (clickCount === 1) {
-                    clickTimer = setTimeout(() => {
-                        clickCount = 0;
-                    }, 1000);
-                }
-                
-                if (clickCount === 3) {
-                    clearTimeout(clickTimer);
-                    clickCount = 0;
-                    document.getElementById('welcome-message').style.display = 'none';
-                    document.getElementById('main-content').style.display = 'flex';
-                }
-            });
-        }
-        
+
         if (viewFile) {
             console.log('🔗 View mode detected:', viewFile);
             
@@ -324,10 +300,6 @@
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                 });
-        }
-        else if (adminMode) {
-            document.getElementById('welcome-message').style.display = 'none';
-            document.getElementById('main-content').style.display = 'flex';
         }
         else {
             document.getElementById('main-content').style.display = 'none';
