@@ -270,7 +270,7 @@
         const viewFile = urlParams.get('view');
 
         if (viewFile) {
-            console.log('🔗 View mode detected:', viewFile);
+           
             
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'none';
@@ -331,18 +331,18 @@
                     if (!file.dir) files.push(file);
                 });
                 
-                console.log('📦 Loading', files.length, 'custom textures...');
+                
                 
                 for (const file of files) {
                     const blob = await file.async('blob');
                     const fileName = file.name.split('/').pop();
                     customTextures[fileName] = URL.createObjectURL(blob);
-                    console.log('✅ Loaded texture:', fileName);
+                    
                 }
                 
                 if (Object.keys(customTextures).length > 0) {
                     hasCustomTextures = true;
-                    console.log('🎨 Custom textures loaded:', Object.keys(customTextures).length);
+                    
                 }
             }
 
@@ -357,7 +357,7 @@
                     toggleBtn.disabled = false;
                     toggleBtn.classList.add('active');
                 }
-                console.log('🎨 Custom textures applied automatically');
+                
             }
 
         } catch (error) {
@@ -1215,13 +1215,13 @@
             }
 
             if (hasCustomTextures && Object.keys(customTextures).length > 0) {
-                console.log('📦 Saving', Object.keys(customTextures).length, 'custom textures...');
+                
                 const texturesFolder = shareZip.folder('custom_textures');
                 for (const [filename, blobUrl] of Object.entries(customTextures)) {
                     const response = await fetch(blobUrl);
                     const blob = await response.blob();
                     texturesFolder.file(filename, blob);
-                    console.log('✅ Saved:', filename);
+                    
                 }
             }
 
@@ -1294,7 +1294,7 @@
                 if (isInCurrentLayer) visibleCount++;
             });
             
-            console.log('🔷 Только слой', currentLayer, '- видимо:', visibleCount, 'блоков');
+            
         } else {
             // Обычный режим "Все слои до текущего"
             const currentMaxY = minY + currentLayer * layerHeight;
@@ -1310,7 +1310,7 @@
                 if (shouldBeVisible) visibleCount++;
             });
             
-            console.log('📊 Слои 1-' + currentLayer, '- видимо:', visibleCount, 'блоков');
+            
         }
     }
 
